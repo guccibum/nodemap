@@ -1,4 +1,4 @@
 window.NODEMAP = {
   "static": true,
-  "mediaBase": "https://REPLACE-ME.r2.dev/"
+  "mediaBase": "https://github.com/guccibum/nodemap/releases/download/media/"
 };
