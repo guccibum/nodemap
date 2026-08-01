@@ -130,6 +130,48 @@ function noteEl(msg) {
   return d;
 }
 
+// A media element reports the same code 4 whether the file was unreachable,
+// missing, or genuinely undecodable. Ask the network which it was, so the node
+// says something true instead of blaming the codec for a failed download.
+const trouble = { reached: 0, blocked: 0, http: 0, codec: 0, first: '' };
+
+async function diagnose(url, show) {
+  let res;
+  try {
+    res = await fetch(url, { method: 'GET', headers: { Range: 'bytes=0-0' } });
+  } catch (err) {
+    trouble.blocked++;
+    trouble.first = trouble.first || (url + ' — ' + err.message);
+    show("can't reach the media host");
+    return report();
+  }
+  if (!res.ok && res.status !== 206) {
+    trouble.http++;
+    trouble.first = trouble.first || (url + ' — HTTP ' + res.status);
+    show('HTTP ' + res.status + ' from the media host');
+    return report();
+  }
+  trouble.codec++;
+  trouble.first = trouble.first || (url + ' — downloaded but would not decode');
+  show("browser can't decode this file");
+  report();
+}
+
+let reportTimer;
+function report() {
+  clearTimeout(reportTimer);
+  reportTimer = setTimeout(() => {
+    const bits = [];
+    if (trouble.blocked) bits.push(`${trouble.blocked} unreachable`);
+    if (trouble.http) bits.push(`${trouble.http} HTTP errors`);
+    if (trouble.codec) bits.push(`${trouble.codec} undecodable`);
+    if (bits.length) {
+      flash('media trouble: ' + bits.join(', ') + ' · ' + trouble.first);
+      console.warn('[node map] media trouble', trouble);
+    }
+  }, 1500);
+}
+
 // Common capture/delivery rates. A measured rate within 2% of one of these is
 // that rate — the difference is sampling noise, not a real cadence.
 const RATES = [23.976, 24, 25, 29.97, 30, 48, 50, 59.94, 60, 90, 120, 240];
@@ -179,7 +221,7 @@ function mediaEl(n, foot) {
   if (n.poster && !wantsFull(n)) {
     const el = new Image();
     el.decoding = 'async';
-    el.onerror = () => fail("can't load " + n.src);
+    el.onerror = () => diagnose(el.src, fail);
     el.src = urlFor(n.poster);
     wrap.appendChild(el);
     return wrap;
@@ -188,9 +230,7 @@ function mediaEl(n, foot) {
   if (n.kind === 'image') {
     const el = new Image();
     el.decoding = 'sync';
-    el.onerror = () => fail(needsProxy(n.src)
-      ? 'no preview yet — restart serve.py'
-      : "can't load " + n.src);
+    el.onerror = () => diagnose(el.src, fail);
     el.onload = () => {
       // For a proxied format the server reports the original's dimensions;
       // the proxy's own size would be a smaller, misleading number.
@@ -213,10 +253,7 @@ function mediaEl(n, foot) {
     // than save them. Smooth playback comes from serve.py's range support,
     // which lets the browser buffer just ahead of the playhead.
     el.preload = 'metadata';
-    el.onerror = () => {
-      const code = el.error && el.error.code;
-      fail(code === 4 ? "browser can't decode this file" : "can't load " + n.src);
-    };
+    el.onerror = () => diagnose(el.currentSrc || el.src, fail);
     el.onloadedmetadata = () => {
       if (n.kind === 'video') {
         n.nw = el.videoWidth;
