@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>node map</title>
+<link rel="icon" href="data:,">
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="canvas">
+  <svg id="wires"><g id="wires-world"></g></svg>
+  <div id="world"></div>
+</div>
+
+<div id="marquee" hidden></div>
+
+<div id="bar">
+  <span class="brand">node map</span>
+  <button data-act="note">+ note</button>
+  <button data-act="fit">fit</button>
+  <button data-act="export">export</button>
+  <button data-act="import">import</button>
+  <button data-act="backup">backup</button>
+  <span id="status"></span>
+</div>
+
+<input type="file" id="importer" accept="application/json" hidden>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

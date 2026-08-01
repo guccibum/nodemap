@@ -1,0 +1,251 @@
+:root{
+  --bg:#141414;
+  --grid:#232323;
+  --node:#1d1d1d;
+  --node-head:#252525;
+  --line:#3a3a3a;
+  --line-hi:#7a7a7a;
+  --text:#d8d8d8;
+  --dim:#7d7d7d;
+  --accent:#8fa9c9;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font:13px/1.4 ui-sans-serif,-apple-system,"Helvetica Neue",sans-serif;
+  overflow:hidden;
+  user-select:none;
+}
+
+/* ---- canvas ---- */
+#canvas{
+  position:fixed;
+  inset:0;
+  overscroll-behavior:none;
+  background-image:radial-gradient(var(--grid) 1px, transparent 1px);
+  background-size:24px 24px;
+}
+#canvas.panning{cursor:grabbing}
+#wires{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+#world{position:absolute;top:0;left:0;transform-origin:0 0}
+
+/* ---- nodes ---- */
+.node{
+  position:absolute;
+  top:0;
+  left:0;                 /* position comes from transform, set in app.js */
+  width:220px;
+  background:var(--node);
+  border:1px solid var(--line);
+  border-radius:4px;
+  transition:border-color .18s ease, box-shadow .18s ease;
+  animation:arrive .22s ease-out both;
+}
+/* only hint compositing while actually in motion — a permanent layer per node
+   costs GPU memory that video decoding wants */
+.node.moving{will-change:transform}
+.node:hover{border-color:#4a4a4a}
+/* the node a grabbed bundle of wires would land on */
+.node.target,.node.target:hover{
+  border-color:var(--accent);
+  box-shadow:0 0 0 2px rgba(143,169,201,.28);
+}
+.node.sel,.node.sel:hover{
+  border-color:var(--accent);
+  box-shadow:0 0 0 1px rgba(143,169,201,.22);
+}
+@keyframes arrive{from{opacity:0}to{opacity:1}}
+
+.node .head{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:5px 8px;
+  background:var(--node-head);
+  border-radius:3px 3px 0 0;
+  border-bottom:1px solid var(--line);
+  cursor:move;
+}
+.node .head .kind{color:var(--dim);font-size:10px;text-transform:uppercase;letter-spacing:.06em}
+.node .head .title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.node .head .title[contenteditable="true"]{user-select:text;cursor:text;outline:none}
+
+.node .body{padding:8px;font-size:12px;color:var(--text)}
+
+/* The media element fills the node's width and takes its height from the file's
+   own aspect ratio (set inline), so a frame is never letterboxed or cropped. */
+.node .body img,
+.node .body video{
+  display:block;
+  width:100%;
+  height:100%;
+  border-radius:2px;
+  background:#000;
+}
+.node .body audio{width:100%}
+.node .body .missing{color:var(--dim);font-size:11px;padding:14px 8px;text-align:center;border:1px dashed var(--line);border-radius:2px}
+/* A note's text is its content, so it scales with the node exactly as an image
+   does. --scale is the node's width over the default width, set in app.js. */
+.node .body .text{
+  user-select:text;
+  cursor:text;
+  outline:none;
+  white-space:pre-wrap;
+  min-height:1.2em;
+  font-size:calc(12px * var(--scale, 1));
+}
+/* the breathing room around it grows too, or a large note looks cramped */
+.node.note .body{padding:calc(8px * var(--scale, 1))}
+
+/* ---- readout ---- */
+.node .foot{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-top:6px;
+  font-size:10px;
+  letter-spacing:.03em;
+  color:var(--dim);
+}
+.node .foot .spec{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-variant-numeric:tabular-nums}
+.node .foot .spec.warn{color:#c9a06a}
+.node .foot .native{
+  flex:none;
+  background:none;
+  color:var(--dim);
+  border:1px solid var(--line);
+  border-radius:2px;
+  padding:1px 5px;
+  font:inherit;
+  cursor:pointer;
+  transition:color .15s ease, border-color .15s ease;
+}
+.node .foot .native:hover{color:var(--text);border-color:var(--line-hi)}
+
+/* ---- resize grip ---- */
+.grip{
+  position:absolute;
+  right:0;
+  bottom:0;
+  width:14px;
+  height:14px;
+  cursor:ew-resize;
+  opacity:0;
+  transition:opacity .15s ease;
+}
+.grip::after{
+  content:"";
+  position:absolute;
+  right:3px;
+  bottom:3px;
+  width:6px;
+  height:6px;
+  border-right:1px solid var(--line-hi);
+  border-bottom:1px solid var(--line-hi);
+}
+.node:hover .grip,.node.sel .grip{opacity:1}
+
+/* ---- ports ---- */
+.port{
+  position:absolute;
+  top:11px;
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  background:var(--bg);
+  border:1px solid var(--line-hi);
+  transition:background .15s ease, border-color .15s ease, transform .15s ease;
+}
+/* generous invisible hit area — the dots themselves are small */
+.port::before{content:"";position:absolute;inset:-6px;border-radius:50%}
+.port.in{left:-5px}
+.port.out{right:-5px;cursor:crosshair}
+.port.out:hover,.port.in:hover,.port.in.hot{
+  background:var(--accent);
+  border-color:var(--accent);
+  transform:scale(1.35);
+}
+.port.in{cursor:crosshair}
+
+/* a port clicked and waiting for its partner */
+.port.armed,.port.armed:hover{
+  background:var(--accent);
+  border-color:var(--accent);
+  transform:scale(1.6);
+  box-shadow:0 0 0 3px rgba(143,169,201,.25);
+}
+/* while one is armed, the ports it could join stand out a little */
+body.connecting .port{border-color:var(--accent)}
+
+/* ---- wires ---- */
+#wires path{
+  fill:none;
+  stroke:var(--line-hi);
+  stroke-width:1.5;
+  pointer-events:stroke;
+  cursor:pointer;
+  vector-effect:non-scaling-stroke;   /* stays readable when zoomed out */
+  transition:stroke .18s ease;
+}
+#wires path:hover{stroke:#9a9a9a}
+#wires path.sel{stroke:var(--accent)}
+#wires path.temp{stroke:var(--accent);stroke-dasharray:4 3;pointer-events:none}
+
+/* ---- far view ---- */
+/* Too small to read: stop painting text nobody can see, so a few hundred nodes
+   read as their pictures. `visibility` rather than `display` on purpose — the
+   boxes keep their exact size, so heights measured for `fit` don't shift with
+   the zoom level, and the header is still there to drag by. */
+body.far .node .kind,
+body.far .node .title,
+body.far .node .spec,
+body.far .node .native,
+body.far .node .text,
+body.far .grip{visibility:hidden}
+
+/* ---- selection box ---- */
+#marquee{
+  position:fixed;
+  z-index:5;
+  pointer-events:none;
+  border:1px solid var(--accent);
+  background:rgba(143,169,201,.10);
+  border-radius:1px;
+}
+
+/* Shift announces the mode before you commit to it. The override has to reach
+   every child — heads, ports and grips all set cursors of their own. */
+body.marking,
+body.marking #canvas,
+body.marking .node,
+body.marking .node *{cursor:crosshair !important}
+
+/* ---- toolbar ---- */
+#bar{
+  position:fixed;
+  left:12px;
+  bottom:12px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 8px;
+  background:rgba(29,29,29,.9);
+  border:1px solid var(--line);
+  border-radius:4px;
+}
+#bar .brand{color:var(--dim);margin-right:4px}
+#bar button{
+  background:var(--node-head);
+  color:var(--text);
+  border:1px solid var(--line);
+  border-radius:3px;
+  padding:3px 8px;
+  font:inherit;
+  cursor:pointer;
+  transition:border-color .15s ease, background .15s ease;
+}
+#bar button:hover{border-color:var(--line-hi);background:#2c2c2c}
+#status{color:var(--dim);margin-left:6px;font-size:11px}
