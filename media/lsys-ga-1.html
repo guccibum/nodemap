@@ -1,0 +1,2054 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>L-System Microsound with Genetic Algorithms</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&family=VT323&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+:root{
+  --plate:#1a1108;
+  --panel:#231709;
+  --panel2:#2b1c0b;
+  --well:#140c05;
+  --bone:#ecdfc0;
+  --bone-dim:rgba(236,223,192,.6);
+  --line:rgba(236,223,192,.3);
+  --line-faint:rgba(236,223,192,.12);
+  --amber:#e2a13c;
+  --amber-dim:rgba(226,161,60,.5);
+  --ember:#cf7033;
+  --faded:#7a6142;
+  --serif:"IM Fell English",Georgia,"Times New Roman",serif;
+  --sc:"IM Fell English SC",Georgia,serif;
+  --mono:"VT323","Courier New",monospace;
+}
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(1200px 700px at 50% -10%, rgba(94,58,20,.5), transparent 65%),
+    radial-gradient(900px 600px at 85% 105%, rgba(72,42,16,.45), transparent 60%),
+    var(--plate);
+  background-attachment:fixed;
+  color:var(--bone);
+  font-family:var(--serif);
+  font-size:16px;
+  line-height:1.45;
+}
+.scanlines{
+  position:fixed;inset:0;z-index:60;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 1px,transparent 1px 3px);
+  opacity:.1;
+}
+.vignette{
+  position:fixed;inset:0;z-index:59;pointer-events:none;
+  background:radial-gradient(130% 100% at 50% 40%,transparent 60%,rgba(0,0,0,.45));
+}
+main{
+  position:relative;z-index:1;
+  max-width:1280px;margin:0 auto;
+  padding:26px 22px 130px;
+}
+header.top{
+  display:flex;align-items:baseline;justify-content:space-between;
+  gap:18px;flex-wrap:wrap;
+}
+h1{
+  margin:0;
+  font-family:var(--sc);font-weight:400;
+  font-size:clamp(24px,3.6vw,36px);
+  letter-spacing:.16em;
+}
+.hud{display:flex;align-items:center;gap:18px}
+.gen-hud{display:flex;align-items:baseline;gap:8px}
+.gen-hud em{
+  font-family:var(--sc);font-style:normal;font-size:13px;
+  letter-spacing:.18em;color:var(--bone-dim);
+}
+.gen-hud b{
+  font-family:var(--mono);font-weight:400;font-size:30px;
+  color:var(--amber);line-height:1;
+}
+.btn{
+  font-family:var(--sc);font-size:13px;letter-spacing:.14em;
+  color:var(--bone);background:transparent;cursor:pointer;
+  border:1px solid var(--line);outline:1px solid var(--line-faint);outline-offset:2px;
+  padding:7px 16px;
+  transition:color .15s,border-color .15s,background .15s;
+}
+.btn:hover{color:var(--amber);border-color:var(--amber-dim)}
+.btn:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.btn.arm{color:var(--plate);background:var(--amber);border-color:var(--amber)}
+.lede{
+  margin:14px 0 0;
+  font-style:italic;color:var(--bone-dim);
+  font-size:15.5px;max-width:64ch;
+}
+.rule{
+  display:flex;align-items:center;gap:16px;
+  margin:22px 0;
+}
+.rule::before,.rule::after{
+  content:"";flex:1;height:1px;
+  background:linear-gradient(90deg,transparent,var(--line));
+}
+.rule::after{background:linear-gradient(90deg,var(--line),transparent)}
+.rule span{color:var(--amber-dim);font-size:15px;line-height:1}
+details.about{
+  margin:18px 0 0;
+  background:linear-gradient(180deg,var(--panel2),var(--panel));
+  border:1px solid var(--line);
+  outline:1px solid var(--line-faint);outline-offset:3px;
+  padding:0;
+}
+details.about summary{
+  cursor:pointer;list-style:none;
+  font-family:var(--sc);font-size:14px;letter-spacing:.16em;
+  padding:12px 18px;color:var(--bone-dim);
+  transition:color .15s;
+}
+details.about summary::-webkit-details-marker{display:none}
+details.about summary::before{content:"❧ ";color:var(--amber-dim)}
+details.about summary:hover{color:var(--amber)}
+details.about[open] summary{border-bottom:1px solid var(--line-faint);color:var(--bone)}
+.about-body{padding:16px 18px 20px;max-width:78ch}
+.about-body p{margin:0 0 14px;font-size:15.5px}
+table.ptable{border-collapse:collapse;width:100%;max-width:620px;margin:0 0 16px}
+table.ptable td{
+  padding:5px 14px 5px 0;vertical-align:baseline;
+  border-bottom:1px solid var(--line-faint);
+}
+table.ptable td:first-child{font-family:var(--sc);font-size:13px;letter-spacing:.06em;white-space:nowrap}
+table.ptable td:nth-child(2){font-family:var(--mono);font-size:17px;color:var(--amber);white-space:nowrap}
+table.ptable td:last-child{font-style:italic;color:var(--bone-dim);font-size:14px}
+table.stable{border-collapse:collapse;width:100%;max-width:620px;margin:0 0 16px}
+table.stable td{
+  padding:5px 14px 5px 0;vertical-align:baseline;
+  border-bottom:1px solid var(--line-faint);
+  font-size:14px;
+}
+table.stable td:first-child{font-family:var(--mono);font-size:19px;color:var(--amber);white-space:nowrap}
+table.stable td:nth-child(2){font-style:italic;color:var(--bone-dim)}
+table.stable td:last-child{font-style:italic;color:var(--bone-dim)}
+table.stable tr.hd td{
+  font-family:var(--sc);font-style:normal;font-size:12px;letter-spacing:.16em;
+  color:var(--bone-dim);
+}
+table.stable tr.hd td:first-child{font-family:var(--sc);font-size:12px;color:var(--bone-dim)}
+.controls{
+  display:grid;gap:16px;
+  grid-template-columns:repeat(auto-fit,minmax(228px,1fr));
+  margin-top:20px;
+}
+.card{
+  background:linear-gradient(180deg,var(--panel2),var(--panel));
+  border:1px solid var(--line);
+  outline:1px solid var(--line-faint);outline-offset:3px;
+  padding:14px 16px 16px;
+}
+.card h2{
+  margin:0 0 4px;
+  font-family:var(--sc);font-weight:400;font-size:14px;
+  letter-spacing:.2em;color:var(--bone);
+}
+.card .cap{
+  margin:0 0 12px;
+  font-style:italic;font-size:13.5px;color:var(--bone-dim);
+  min-height:2.6em;
+}
+.prow{margin:10px 0 0}
+.prow label{
+  display:block;font-family:var(--sc);font-size:12px;
+  letter-spacing:.14em;color:var(--bone-dim);margin-bottom:4px;
+}
+.pair{display:flex;align-items:center;gap:10px}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;
+  flex:1;height:22px;background:transparent;cursor:pointer;margin:0;
+}
+input[type=range]::-webkit-slider-runnable-track{
+  height:5px;background:#4d3a20;
+  border:1px solid rgba(236,223,192,.2);
+}
+input[type=range]::-moz-range-track{
+  height:5px;background:#4d3a20;
+  border:1px solid rgba(236,223,192,.2);
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:13px;height:13px;border-radius:50%;
+  margin-top:-5px;
+  background:radial-gradient(circle at 50% 38%,#f2ead6,#b3a888);
+  border:1px solid #3a2810;
+}
+input[type=range]::-moz-range-thumb{
+  width:11px;height:11px;border-radius:50%;
+  background:radial-gradient(circle at 50% 38%,#f2ead6,#b3a888);
+  border:1px solid #3a2810;
+}
+input[type=range]:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+input[type=range].fit::-webkit-slider-runnable-track{
+  background:linear-gradient(90deg,var(--faded),var(--ember) 68%,var(--amber));
+}
+input[type=range].fit::-moz-range-track{
+  background:linear-gradient(90deg,var(--faded),var(--ember) 68%,var(--amber));
+}
+input[type=number]{
+  font-family:var(--mono);font-size:18px;color:var(--bone);
+  background:var(--well);border:1px solid var(--line);
+  width:6ch;padding:2px 6px;
+  -moz-appearance:textfield;appearance:textfield;
+}
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]:focus-visible{outline:2px solid var(--amber);outline-offset:1px}
+select{
+  font-family:var(--serif);font-size:15px;color:var(--bone);
+  background:var(--well) url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23e2a13c' stroke-width='1.4'/%3E%3C/svg%3E") no-repeat right 10px center;
+  border:1px solid var(--line);
+  width:100%;padding:6px 30px 6px 10px;
+  -webkit-appearance:none;appearance:none;cursor:pointer;
+}
+select:focus-visible{outline:2px solid var(--amber);outline-offset:1px}
+#plate{
+  display:grid;gap:18px;
+  grid-template-columns:repeat(auto-fill,minmax(196px,1fr));
+}
+.specimen{
+  background:linear-gradient(180deg,var(--panel2),var(--panel));
+  border:1px solid var(--line);
+  outline:1px solid var(--line-faint);outline-offset:3px;
+  padding:12px 12px 12px;
+  display:flex;flex-direction:column;gap:9px;
+  transition:opacity .3s,border-color .25s,outline-color .25s;
+}
+.specimen.is-playing{
+  border-color:var(--amber-dim);
+  outline-color:rgba(226,161,60,.35);
+}
+body.auditioning #plate .specimen:not(.is-playing){opacity:.32}
+.fig-head{
+  display:flex;align-items:baseline;justify-content:space-between;gap:8px;
+  min-height:18px;
+}
+.fig-no{
+  font-family:var(--sc);font-size:13px;letter-spacing:.12em;
+  color:var(--bone-dim);
+}
+.specimen.is-playing .fig-no{color:var(--amber)}
+.elite-tag{
+  font-family:var(--sc);font-size:10px;letter-spacing:.16em;
+  color:var(--amber);border:1px solid var(--amber-dim);
+  padding:1px 7px;line-height:1.5;
+}
+button.figure{
+  position:relative;display:block;width:100%;
+  aspect-ratio:1/1;padding:0;cursor:pointer;
+  background:var(--well);
+  border:1px solid var(--line-faint);
+}
+button.figure:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.fig-inner{position:absolute;inset:0;will-change:transform}
+.fig-inner canvas{
+  position:absolute;inset:0;width:100%;height:100%;display:block;
+  transition:opacity .25s;
+}
+.glow{
+  position:absolute;inset:-6%;pointer-events:none;
+  opacity:var(--env,0);
+  mix-blend-mode:screen;
+}
+.rules-strip{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:2px;
+}
+.rw{
+  font-family:var(--mono);font-size:14px;line-height:1.35;
+  color:var(--bone);background:var(--well);
+  border:1px solid rgba(236,223,192,.2);
+  padding:1px 3px;text-align:center;
+  white-space:nowrap;overflow:hidden;
+}
+.rw b{color:var(--amber);font-weight:400}
+.genes{
+  display:grid;grid-template-columns:repeat(10,1fr);gap:2px;
+  height:18px;
+}
+.gene{
+  position:relative;overflow:hidden;
+  background:var(--well);border:1px solid rgba(236,223,192,.2);
+}
+.gene i{
+  position:absolute;left:0;right:0;bottom:0;
+  background:rgba(236,223,192,.5);
+}
+.fit-row{display:flex;align-items:center;gap:8px}
+.fit-row input[type=number]{width:5.5ch;font-size:17px}
+.p-toggle{
+  align-self:center;
+  font-family:var(--serif);font-style:italic;font-size:13px;
+  color:var(--bone-dim);background:none;border:none;cursor:pointer;
+  padding:1px 6px;
+}
+.p-toggle:hover{color:var(--amber)}
+.p-toggle:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.p-body{border-top:1px solid var(--line-faint);padding-top:8px}
+.p-body pre{
+  margin:0 0 8px;
+  font-family:var(--mono);font-size:15px;line-height:1.4;
+  color:var(--bone);white-space:pre;overflow-x:auto;
+}
+.p-body pre b{color:var(--amber);font-weight:400}
+.copy-btn{font-size:11px;padding:4px 12px}
+.dl-row{display:flex;gap:5px;flex-wrap:wrap}
+.dl-row .btn{flex:1 1 40px;font-size:11px;letter-spacing:.08em;padding:4px 2px}
+.evolvebar{
+  position:fixed;left:0;right:0;bottom:0;z-index:50;
+  display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+  gap:12px;
+  padding:12px max(22px,env(safe-area-inset-left)) calc(12px + env(safe-area-inset-bottom)) max(22px,env(safe-area-inset-right));
+  background:rgba(21,13,5,.88);
+  backdrop-filter:blur(6px);
+  border-top:1px solid var(--line-faint);
+}
+.evolvebar .bar-gen{
+  justify-self:start;
+  font-family:var(--mono);font-size:20px;color:var(--bone-dim);
+}
+.evolvebar .bar-gen b{color:var(--amber);font-weight:400}
+#evolveBtn{
+  justify-self:center;
+  font-size:19px;letter-spacing:.24em;
+  padding:11px 46px;
+  color:var(--amber);border-color:var(--amber-dim);
+  outline:1px solid rgba(226,161,60,.25);outline-offset:3px;
+}
+#evolveBtn:hover{background:var(--amber);color:var(--plate)}
+.born{animation:born .45s ease-out backwards}
+@keyframes born{
+  from{opacity:0;transform:translateY(7px)}
+  to{opacity:1;transform:none}
+}
+@media (max-width:560px){
+  #plate{grid-template-columns:repeat(auto-fill,minmax(156px,1fr));gap:14px}
+  .evolvebar .bar-gen{font-size:17px}
+  #evolveBtn{padding:10px 30px;font-size:17px}
+}
+@media (prefers-reduced-motion:reduce){
+  .born{animation:none}
+  .specimen,.fig-inner canvas{transition:none}
+}
+</style>
+</head>
+<body>
+<div class="scanlines" aria-hidden="true"></div>
+<div class="vignette" aria-hidden="true"></div>
+<main>
+  <header class="top">
+    <h1>L-System Microsound with Genetic Algorithms</h1>
+    <div class="hud">
+      <span class="gen-hud"><em>Generation</em> <b id="genNum" aria-live="polite">0</b></span>
+      <button class="btn" id="saveBtn" title="download this session — population, ratings, and settings — as a JSON file">SAVE</button>
+      <button class="btn" id="loadBtn" title="restore a session from its JSON file">LOAD</button>
+      <input id="loadFile" type="file" accept=".json,application/json" hidden>
+      <button class="btn" id="resetBtn">RESET</button>
+    </div>
+  </header>
+  <p class="lede">Click a figure to hear it and set its fitness from 0 to 1. EVOLVE breeds the next generation from those ratings.</p>
+
+  <details class="about">
+    <summary>On the method</summary>
+    <div class="about-body">
+      <p>Every specimen carries a genome in two parts. The first spells a <em>grammar</em>: for each of the eight symbols of the alphabet, a production rule of one to four symbols, decoded from continuous genes so that crossover can blend two grammars and mutation can drift one rule into a neighboring one. The second spells the <em>draw rules</em> of a small microsound engine — the windowed hard-sync oscillator — that reads the grammar's string one symbol at a time. Starting from the axiom <b>p</b>, the rules are rewritten generation upon generation, and the string is taken from however many rewritings it needs to sing for at least five seconds; the performance is cut at ten. Nothing is concatenated across rewritings, and unlike drifting rules inside a single string, evolution here happens between specimens: the genetic algorithm breeds whole grammars against each other.</p>
+      <table class="stable">
+        <tr class="hd"><td>symbol</td><td>in the sound</td><td>in the figure</td></tr>
+        <tr><td>p</td><td>one windowed cycle of the oscillator</td><td>one stroke of the pen</td></tr>
+        <tr><td>.</td><td>one cycle of silence</td><td>the pen lifts and glides</td></tr>
+        <tr><td>S · s</td><td>sync state up · down</td><td>the turning quickens · eases</td></tr>
+        <tr><td>I · i</td><td>intrinsic state up · down</td><td>the reach grows · shrinks</td></tr>
+        <tr><td>+ · −</td><td>amplitude state up · down</td><td>the ink darkens · fades</td></tr>
+      </table>
+      <p>Only <b>p</b> and <b>.</b> make time pass. The other six symbols nudge three hidden states, and the states wander without bound — but each is folded through a sine wave and mapped <em>exponentially</em> between the minimum and maximum written in the genome, so no frequency ever escapes its range, and every step through the fold moves in equal musical ratios rather than equal hertz. The frequency bounds sit on their genes exponentially too, so blending two genomes blends their registers in equal ratios. The rules for <b>p</b> and <b>.</b> are pinned to contain a <b>p</b>, so no lineage ever falls silent.</p>
+      <table class="ptable">
+        <tr><td>intrinsic frequency</td><td>20–1000 → 1000–12000 Hz</td><td>floor and ceiling of the sine's own pitch</td></tr>
+        <tr><td>sync frequency</td><td>60–1000 → 1000–8000 Hz</td><td>floor and ceiling of the cycle rate</td></tr>
+        <tr><td>Δ intrinsic · Δ sync · Δ amp</td><td>10⁻⁴–10⁻¹</td><td>the step a symbol adds to a state</td></tr>
+        <tr><td>origins</td><td>0–1</td><td>where each state begins its walk</td></tr>
+        <tr><td>duration</td><td>5–10 s</td><td>short strings loop, and their states keep walking</td></tr>
+      </table>
+      <p>Each figure is drawn from the very same string by a second set of draw rules. The pen circles the plate as an unbroken line: its turning is tied to the sync state, its reach from the centre to the intrinsic state — folded through the same sine that bounds the frequencies, which is what keeps the line inside the plate — and its weight of ink to the amplitude state. Silences lift the pen and leave a gap. What you see is the sound's own trajectory, and while a specimen plays, the line is retraced in time with the audio. Identical genomes always produce identical figures and identical sound. You are the fitness function: specimens you rate highly are more likely to survive selection and pass both their grammar and their draw rules to the next generation, so the population adapts to your taste.</p>
+      <p>Beneath each figure, <b>WAV</b> saves the specimen's sound, <b>PNG</b> its finished figure at high resolution, <b>GIF</b> the retracing as a silent animation, and <b>FILM</b> a real-time movie of figure and sound together (keep the tab visible while it records). Files are named by generation, figure, and genome so no two downloads collide. <b>SAVE</b> in the header writes the whole session — population, ratings, and settings — into a JSON file; <b>LOAD</b> restores it exactly.</p>
+    </div>
+  </details>
+
+  <section class="controls" aria-label="Algorithm settings">
+    <div class="card">
+      <h2>Mutation</h2>
+      <p class="cap">After crossover, each gene may change at random. Probability sets how often a gene mutates and sigma sets how far it moves.</p>
+      <div class="prow"><label for="mutP">probability</label>
+        <div class="pair"><input type="range" id="mutP" min="0" max="1" step="0.01" value="0.1"><input type="number" id="mutPN" min="0" max="1" step="0.01" value="0.1" aria-label="Mutation probability"></div>
+      </div>
+      <div class="prow"><label for="mutS">sigma</label>
+        <div class="pair"><input type="range" id="mutS" min="0" max="0.5" step="0.01" value="0.08"><input type="number" id="mutSN" min="0" max="0.5" step="0.01" value="0.08" aria-label="Mutation sigma"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Population</h2>
+      <p class="cap">Size is the number of specimens in each generation. Elites are the top-rated specimens, copied unchanged into the next generation.</p>
+      <div class="prow"><label for="popS">size</label>
+        <div class="pair"><input type="range" id="popS" min="4" max="32" step="1" value="12"><input type="number" id="popSN" min="4" max="32" step="1" value="12" aria-label="Population size"></div>
+      </div>
+      <div class="prow"><label for="elit">elitism</label>
+        <div class="pair"><input type="range" id="elit" min="0" max="10" step="1" value="2"><input type="number" id="elitN" min="0" max="10" step="1" value="2" aria-label="Elitism"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Grammar</h2>
+      <p class="cap">Every production rule is a word of min to max symbols, decoded from the genome. Genes beyond a rule's length lie dormant and can resurface when the length mutates.</p>
+      <div class="prow"><label for="wMin">min word</label>
+        <div class="pair"><input type="range" id="wMin" min="1" max="4" step="1" value="2"><input type="number" id="wMinN" min="1" max="4" step="1" value="2" aria-label="Minimum word length"></div>
+      </div>
+      <div class="prow"><label for="wMax">max word</label>
+        <div class="pair"><input type="range" id="wMax" min="1" max="4" step="1" value="3"><input type="number" id="wMaxN" min="1" max="4" step="1" value="3" aria-label="Maximum word length"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Selection</h2>
+      <p class="cap" id="selCap"></p>
+      <div class="prow">
+        <select id="selMode" aria-label="Selection method">
+          <option value="prob">Probabilistic</option>
+          <option value="tournament">Tournament</option>
+          <option value="roulette">Roulette</option>
+        </select>
+      </div>
+      <div id="selParams"></div>
+    </div>
+    <div class="card">
+      <h2>Crossover</h2>
+      <p class="cap" id="xCap"></p>
+      <div class="prow">
+        <select id="xType" aria-label="Crossover type">
+          <option value="uniform">Uniform</option>
+          <option value="single_point">Single point</option>
+          <option value="arithmetic">Arithmetic</option>
+        </select>
+      </div>
+      <div id="xParams"></div>
+    </div>
+  </section>
+
+  <div class="rule" aria-hidden="true"><span>❦</span></div>
+
+  <section id="plate" aria-label="Population"></section>
+</main>
+
+<div class="evolvebar">
+  <span class="bar-gen">GEN <b id="genEcho">0</b></span>
+  <button class="btn" id="evolveBtn">EVOLVE</button>
+  <span></span>
+</div>
+
+<script>
+/* ---------- alphabet & genome layout ---------- */
+
+// bin order for decoding a continuous gene into a symbol: decreases on the
+// left, emitters in the middle, increases on the right, so a small mutation
+// drifts to a functional neighbor and a blend of two symbols lands between.
+const SYMBOLS = ["-", "i", "s", ".", "p", "S", "I", "+"];
+const RULE_KEYS = ["p", ".", "S", "s", "I", "i", "+", "-"];
+const N_RULES = 8;
+const SLOTS = 4;                     // slot genes per rule (max word length)
+const RULE_BLOCK = 1 + SLOTS;        // one length gene + slot genes
+const B0 = N_RULES * RULE_BLOCK;     // draw-rule genes start here (40)
+
+const DRAW_DEFS = [
+  { key: "intrinsic_freq_min", name: "intrinsic min", unit: " Hz", min: 20,   max: 1000,  map: "exp", dp: 1 },
+  { key: "intrinsic_freq_max", name: "intrinsic max", unit: " Hz", min: 1000, max: 12000, map: "exp", dp: 1 },
+  { key: "delta_intrinsic",    name: "Δ intrinsic",   unit: "",    min: 1e-4, max: 0.1,   map: "exp", dp: -1 },
+  { key: "sync_freq_min",      name: "sync min",      unit: " Hz", min: 60,   max: 1000,  map: "exp", dp: 1 },
+  { key: "sync_freq_max",      name: "sync max",      unit: " Hz", min: 1000, max: 8000,  map: "exp", dp: 1 },
+  { key: "delta_sync",         name: "Δ sync",        unit: "",    min: 1e-4, max: 0.1,   map: "exp", dp: -1 },
+  { key: "delta_amp",          name: "Δ amp",         unit: "",    min: 1e-4, max: 0.1,   map: "exp", dp: -1 },
+  { key: "state0_intrinsic",   name: "origin intrinsic", unit: "", min: 0,    max: 1,     map: "lin", dp: 2 },
+  { key: "state0_sync",        name: "origin sync",      unit: "", min: 0,    max: 1,     map: "lin", dp: 2 },
+  { key: "state0_amp",         name: "origin amp",       unit: "", min: 0,    max: 1,     map: "lin", dp: 2 }
+];
+const GENES = B0 + DRAW_DEFS.length; // 50
+
+/* ---------- performance & rendering constants ---------- */
+
+const MIN_DUR = 5;          // seconds of audio a string must reach
+const MAX_DUR = 10;         // hard cut
+const MAX_GENS = 16;        // rewriting cap
+const MAX_SYM = 200000;     // string length cap
+const REND_OPS = 5000000;   // symbol budget for one full walk over the sound
+const AUDIO_OPS = 6500000;  // audio walk budget, with margin over REND_OPS
+const VIS_MAX_SEGS = 2600;  // pen strokes kept per figure
+
+const TURN_MIN = 0.02, TURN_MAX = 1.25;   // radians per stroke
+const R_MIN = 0.035, R_MAX = 0.46;        // reach, as fraction of the plate
+
+const AMP = 0.35;
+const LOUDNESS_STRENGTH = 0.5;
+
+/* ---------- small helpers ---------- */
+
+function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
+function lerp(a, b, x) { return a + (b - a) * x; }
+function fold(state) { return (Math.sin(state * 2 * Math.PI) + 1) / 2; }
+
+function gauss() {
+  let u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+
+/* ---------- genome decode ---------- */
+
+function decodeRules(g, wordMin, wordMax) {
+  const rules = {};
+  const span = wordMax - wordMin + 1;
+  for (let k = 0; k < N_RULES; k++) {
+    const base = k * RULE_BLOCK;
+    const L = wordMin + Math.min(span - 1, Math.floor(clamp(g[base], 0, 1) * span));
+    let w = "";
+    for (let s = 0; s < L; s++) {
+      const x = clamp(g[base + 1 + s], 0, 1);
+      w += SYMBOLS[Math.min(7, Math.floor(x * 8))];
+    }
+    rules[RULE_KEYS[k]] = w;
+  }
+  // constraint: the rules for p and . must contain a p (deterministic repair)
+  for (const sym of ["p", "."]) {
+    if (rules[sym].indexOf("p") === -1) {
+      const base = RULE_KEYS.indexOf(sym) * RULE_BLOCK;
+      const w = rules[sym].split("");
+      const idx = Math.min(w.length - 1, Math.floor(clamp(g[base], 0, 1) * w.length));
+      w[idx] = "p";
+      rules[sym] = w.join("");
+    }
+  }
+  return rules;
+}
+
+function decodeDraw(g) {
+  const p = {};
+  for (let i = 0; i < DRAW_DEFS.length; i++) {
+    const d = DRAW_DEFS[i];
+    const x = clamp(g[B0 + i], 0, 1);
+    p[d.key] = d.map === "exp" ? d.min * Math.pow(d.max / d.min, x) : lerp(d.min, d.max, x);
+  }
+  return p;
+}
+
+/* ---------- L-system expansion ---------- */
+
+function rewrite(str, rules) {
+  const out = [];
+  let len = 0;
+  for (let i = 0; i < str.length; i++) {
+    const w = rules[str[i]];
+    out.push(w);
+    len += w.length;
+    if (len >= MAX_SYM) break;
+  }
+  const s = out.join("");
+  return s.length > MAX_SYM ? s.slice(0, MAX_SYM) : s;
+}
+
+function estimateDur(str, P) {
+  let ss = P.state0_sync, dur = 0;
+  const ratio = P.sync_freq_max / P.sync_freq_min;
+  for (let i = 0; i < str.length; i++) {
+    const c = str[i];
+    if (c === "S") ss += P.delta_sync;
+    else if (c === "s") ss -= P.delta_sync;
+    else if (c === "p" || c === ".") {
+      dur += 1 / (P.sync_freq_min * Math.pow(ratio, fold(ss)));
+      if (dur >= MAX_DUR) return dur;
+    }
+  }
+  return dur;
+}
+
+// can this string be looped up to MIN_DUR of audio within the walk budget?
+function renderable(strLen, est) {
+  if (est <= 0) return false;
+  if (est >= MIN_DUR) return true;
+  return strLen * Math.ceil(MIN_DUR / est) <= REND_OPS;
+}
+
+/* ---------- visual draw rules: the pen ---------- */
+
+// how many cycles the rendered audio will contain, mirroring renderAudio's
+// pass/loop semantics, so the figure can be sampled across the whole sound
+function countEmits(str, P) {
+  let ss = P.state0_sync;
+  let t = 0, count = 0, ops = 0;
+  const ratio = P.sync_freq_max / P.sync_freq_min;
+  outer:
+  while (t < MIN_DUR) {
+    const t0 = t;
+    for (let k = 0; k < str.length; k++) {
+      if (++ops > REND_OPS) break outer;
+      const c = str[k];
+      if (c === "S") ss += P.delta_sync;
+      else if (c === "s") ss -= P.delta_sync;
+      else if (c === "p" || c === ".") {
+        t += 1 / (P.sync_freq_min * Math.pow(ratio, fold(ss)));
+        count++;
+        if (t >= MAX_DUR) break outer;
+      }
+    }
+    if (t === t0) break;
+  }
+  return count;
+}
+
+function traceVisual(str, P) {
+  const total = countEmits(str, P);
+  const stride = Math.max(1, Math.ceil(total / VIS_MAX_SEGS));
+  const segs = [];
+  let si = P.state0_intrinsic, ss = P.state0_sync, sa = P.state0_amp;
+  let phi = P.state0_sync * Math.PI * 2;
+  let r = null, px = null, py = null;
+  let t = 0, ops = 0, emitN = 0;
+  let pC = 0, dotC = 0; // voiced and silent cycles since the last sample
+  const sratio = P.sync_freq_max / P.sync_freq_min;
+  const tratio = TURN_MAX / TURN_MIN;
+  const rratio = R_MAX / R_MIN;
+  outer:
+  while (t < MIN_DUR) {
+    const t0 = t;
+    for (let k = 0; k < str.length; k++) {
+      if (++ops > REND_OPS) break outer;
+      const c = str[k];
+      if (c === "S") ss += P.delta_sync;
+      else if (c === "s") ss -= P.delta_sync;
+      else if (c === "I") si += P.delta_intrinsic;
+      else if (c === "i") si -= P.delta_intrinsic;
+      else if (c === "+") sa += P.delta_amp;
+      else if (c === "-") sa -= P.delta_amp;
+      else {
+        const fs = fold(ss), fi = fold(si), fa = fold(sa);
+        const sync = P.sync_freq_min * Math.pow(sratio, fs);
+        phi += TURN_MIN * Math.pow(tratio, fs);
+        const rT = R_MIN * Math.pow(rratio, fi);
+        r = r === null ? rT : r + (rT - r) * 0.12;
+        if (c === ".") dotC++; else pC++;
+        if (++emitN % stride === 0) {
+          const x = 0.5 + Math.cos(phi) * r;
+          const y = 0.5 + Math.sin(phi) * r;
+          if (px !== null && pC > 0) {
+            // ink scaled by the voiced share of the cycles in this sample
+            const faE = fa * pC / (pC + dotC);
+            segs.push({
+              x0: px, y0: py, x1: x, y1: y, t, fa: faE, fi,
+              q: Math.min(3, Math.floor(fi * 4)) * 6 + Math.min(5, Math.floor(faE * 6))
+            });
+          }
+          px = x; py = y;
+          pC = 0; dotC = 0;
+        }
+        t += 1 / sync;
+        if (segs.length >= VIS_MAX_SEGS * 1.5 || t >= MAX_DUR) break outer;
+      }
+    }
+    if (t === t0) break;
+  }
+  return { segs, dur: t };
+}
+
+/* ---------- phenotype: genome -> grammar, string, figure ---------- */
+
+function buildPhenotype(g) {
+  const rules = decodeRules(g, engine.grammar.wordMin, engine.grammar.wordMax);
+  const P = decodeDraw(g);
+  let str = "p", gens = 0;
+  let est = estimateDur(str, P);
+  let best = { str, gens, est }; // the axiom is always renderable
+  while (gens < MAX_GENS && str.length < MAX_SYM && est < MIN_DUR) {
+    str = rewrite(str, rules);
+    gens++;
+    est = estimateDur(str, P);
+    if (renderable(str.length, est) && est > best.est) best = { str, gens, est };
+  }
+  // a rewriting only counts if looping it to five seconds fits the walk
+  // budget; emitter-starved giants fall back to a more sonorous rewriting
+  if (!renderable(str.length, est) || best.est > est) ({ str, gens, est } = best);
+  let audioDur;
+  if (est >= MAX_DUR) audioDur = MAX_DUR;
+  else if (est >= MIN_DUR) audioDur = est;
+  else audioDur = Math.min(MAX_DUR, est * Math.ceil(MIN_DUR / Math.max(1e-6, est)));
+  return { g, rules, P, str, gens, est, audioDur, trace: traceVisual(str, P) };
+}
+
+/* ---------- GA engine (as in the companion apps) ---------- */
+
+function randomGenome() {
+  const g = new Array(GENES);
+  for (let i = 0; i < GENES; i++) g[i] = Math.random();
+  return g;
+}
+
+function crossoverUniform(a, b, pSwap) {
+  const c = new Array(a.length);
+  for (let i = 0; i < a.length; i++) c[i] = Math.random() < pSwap ? a[i] : b[i];
+  return c;
+}
+
+function crossoverSinglePoint(a, b, point) {
+  if (a.length < 2) return a.slice();
+  const c = new Array(a.length);
+  for (let i = 0; i < a.length; i++) c[i] = i < point ? a[i] : b[i];
+  return c;
+}
+
+function crossoverArithmetic(a, b, alpha) {
+  const c = new Array(a.length);
+  for (let i = 0; i < a.length; i++) c[i] = clamp(alpha * a[i] + (1 - alpha) * b[i], 0, 1);
+  return c;
+}
+
+function mutate(g, p, sigma) {
+  const m = g.slice();
+  for (let i = 0; i < m.length; i++) {
+    if (Math.random() < p) {
+      if (Math.random() < 0.5) m[i] += gauss() * sigma;
+      else m[i] = Math.random();
+    }
+    m[i] = clamp(m[i], 0, 1);
+  }
+  return m;
+}
+
+function rankIndices(fit) {
+  return [...fit.keys()].sort((a, b) => fit[b] - fit[a]);
+}
+
+function sampleWithoutReplacement(arr, k) {
+  const a = arr.slice();
+  for (let i = 0; i < k; i++) {
+    const j = i + Math.floor(Math.random() * (a.length - i));
+    const t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a.slice(0, k);
+}
+
+function weightedSampleWithoutReplacement(weights, k) {
+  const idx = [...weights.keys()];
+  const w = weights.slice();
+  const chosen = [];
+  for (let n = 0; n < k && idx.length > 0; n++) {
+    let total = 0;
+    for (const x of w) total += x;
+    let r = Math.random() * total;
+    let pick = w.length - 1;
+    for (let i = 0; i < w.length; i++) {
+      r -= w[i];
+      if (r <= 0) { pick = i; break; }
+    }
+    chosen.push(idx[pick]);
+    idx.splice(pick, 1);
+    w.splice(pick, 1);
+  }
+  return chosen;
+}
+
+const engine = {
+  popSize: 12,
+  mutationProb: 0.1,
+  mutationSigma: 0.08,
+  elitism: 2,
+  crossoverType: "uniform",
+  crossoverParams: { p_swap: 0.5, point: 25, alpha: 0.5 },
+  selectionMode: "prob",
+  selectionParams: { rounds: 1, k: 3, keep_frac: 0.5, power: 1.0 },
+  grammar: { wordMin: 2, wordMax: 3 },
+  generation: 0,
+  population: [],
+  fitness: []
+};
+
+let lastEliteCount = 0;
+
+function initPopulation() {
+  engine.population = [];
+  for (let i = 0; i < engine.popSize; i++) engine.population.push(randomGenome());
+  engine.fitness = new Array(engine.popSize).fill(0);
+  engine.generation = 0;
+  lastEliteCount = 0;
+}
+
+function doCrossover(a, b) {
+  if (engine.crossoverType === "uniform") {
+    return crossoverUniform(a, b, engine.crossoverParams.p_swap);
+  }
+  if (engine.crossoverType === "single_point") {
+    const point = Math.round(clamp(engine.crossoverParams.point, 1, a.length - 1));
+    return crossoverSinglePoint(a, b, point);
+  }
+  if (engine.crossoverType === "arithmetic") {
+    return crossoverArithmetic(a, b, clamp(engine.crossoverParams.alpha, 0, 1));
+  }
+  return crossoverUniform(a, b, 0.5);
+}
+
+function selectSurvivors() {
+  const n = engine.population.length;
+  const fit = engine.fitness;
+  if (engine.selectionMode === "prob") {
+    const rounds = Math.max(1, Math.round(engine.selectionParams.rounds));
+    const winners = [];
+    for (let i = 0; i < n; i++) {
+      const p = clamp(fit[i], 0, 1);
+      let ok = false;
+      for (let r = 0; r < rounds; r++) {
+        if (Math.random() < p) { ok = true; break; }
+      }
+      if (ok) winners.push(i);
+    }
+    if (winners.length < Math.max(2, engine.elitism)) {
+      return rankIndices(fit).slice(0, Math.max(2, engine.elitism)).map(i => engine.population[i]);
+    }
+    return winners.map(i => engine.population[i]);
+  }
+  if (engine.selectionMode === "tournament") {
+    const k = Math.round(clamp(engine.selectionParams.k, 2, n));
+    const keep = clamp(engine.selectionParams.keep_frac, 0.05, 1);
+    const target = Math.max(engine.elitism, Math.ceil(keep * n));
+    const winners = new Set();
+    const idx = [...Array(n).keys()];
+    let guard = 200 * n;
+    while (winners.size < target && guard-- > 0) {
+      const cand = sampleWithoutReplacement(idx, Math.min(k, n));
+      let best = cand[0];
+      for (const j of cand) if (fit[j] > fit[best]) best = j;
+      winners.add(best);
+      if (winners.size === n) break;
+    }
+    return [...winners].map(i => engine.population[i]);
+  }
+  if (engine.selectionMode === "roulette") {
+    const keep = clamp(engine.selectionParams.keep_frac, 0.05, 1);
+    const power = Math.max(0.1, engine.selectionParams.power);
+    let target = Math.max(engine.elitism, Math.ceil(keep * n));
+    target = Math.min(target, n);
+    let w = fit.map(f => Math.pow(Math.max(0, f), power));
+    if (w.every(x => x === 0)) w = w.map(() => 1);
+    return weightedSampleWithoutReplacement(w, target).map(i => engine.population[i]);
+  }
+  return rankIndices(fit).slice(0, Math.max(2, engine.elitism)).map(i => engine.population[i]);
+}
+
+function chooseParents(survivors) {
+  if (survivors.length >= 2) return sampleWithoutReplacement(survivors, 2);
+  if (survivors.length === 1) return [survivors[0], randomGenome()];
+  return [randomGenome(), randomGenome()];
+}
+
+function breed() {
+  const survivors = selectSurvivors();
+  const order = rankIndices(engine.fitness);
+  const elites = order.slice(0, engine.elitism).map(i => engine.population[i].slice());
+  const newPop = elites.slice();
+  while (newPop.length < engine.popSize) {
+    const [a, b] = chooseParents(survivors);
+    let child = doCrossover(a, b);
+    child = mutate(child, engine.mutationProb, engine.mutationSigma);
+    newPop.push(child);
+  }
+  engine.population = newPop.slice(0, engine.popSize);
+  engine.fitness = new Array(engine.popSize).fill(0);
+  engine.generation += 1;
+  lastEliteCount = Math.min(elites.length, engine.popSize);
+}
+
+/* ---------- drawing ---------- */
+
+function toRoman(n) {
+  const table = [[1000, "M"], [900, "CM"], [500, "D"], [400, "CD"], [100, "C"], [90, "XC"], [50, "L"], [40, "XL"], [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]];
+  let out = "";
+  for (const [v, s] of table) { while (n >= v) { out += s; n -= v; } }
+  return out;
+}
+
+function mixc(a, b, t) { return a.map((v, i) => Math.round(lerp(v, b[i], t))); }
+function rgba(c, a) { return "rgba(" + c[0] + "," + c[1] + "," + c[2] + "," + a + ")"; }
+
+function inkPair(t) {
+  const lo = mixc([182, 84, 58], [224, 122, 38], t);
+  const hi = mixc([236, 196, 138], [248, 224, 162], t);
+  return { lo, hi };
+}
+
+const ALPHAS = [0.16, 0.30, 0.44, 0.57, 0.70, 0.84];
+
+function segIndexAt(segs, t) {
+  let lo = 0, hi = segs.length;
+  while (lo < hi) {
+    const m = (lo + hi) >> 1;
+    if (segs[m].t <= t) lo = m + 1; else hi = m;
+  }
+  return lo;
+}
+
+function strokeGroups(ctx, segs, from, to, S, ink, mult) {
+  if (to <= from) return;
+  const buckets = [];
+  for (let i = from; i < to; i++) {
+    const q = segs[i].q;
+    (buckets[q] || (buckets[q] = [])).push(i);
+  }
+  for (let q = 0; q < 24; q++) {
+    const list = buckets[q];
+    if (!list) continue;
+    const ci = Math.floor(q / 6), ai = q % 6;
+    ctx.beginPath();
+    for (const i of list) {
+      const s = segs[i];
+      ctx.moveTo(s.x0 * S, s.y0 * S);
+      ctx.lineTo(s.x1 * S, s.y1 * S);
+    }
+    ctx.strokeStyle = rgba(mixc(ink.lo, ink.hi, ci / 3), ALPHAS[ai] * mult);
+    ctx.lineWidth = Math.max(0.6, S * (0.0016 + 0.0042 * ai / 5));
+    ctx.stroke();
+  }
+}
+
+function drawSpecimen(canvas, ph, ink, playT, exportPx) {
+  const dpr = exportPx ? 1 : (window.devicePixelRatio || 1);
+  const cw = canvas.clientWidth || 200;
+  const S = exportPx || Math.max(120, cw);
+  canvas.width = Math.round(S * dpr);
+  canvas.height = Math.round(S * dpr);
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, S, S);
+  ctx.lineCap = "round";
+
+  ctx.beginPath();
+  ctx.arc(S / 2, S / 2, S * 0.475, 0, Math.PI * 2);
+  ctx.strokeStyle = rgba(ink.hi, 0.10);
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  const segs = ph.trace.segs;
+  if (!segs.length) {
+    ctx.beginPath();
+    ctx.arc(S / 2, S / 2, Math.max(1.5, S * 0.008), 0, Math.PI * 2);
+    ctx.fillStyle = rgba(ink.hi, 0.8);
+    ctx.fill();
+    return;
+  }
+
+  const playing = playT != null;
+  strokeGroups(ctx, segs, 0, segs.length, S, ink, playing ? 0.22 : 1);
+  let upTo = segs.length;
+  if (playing) {
+    upTo = segIndexAt(segs, playT);
+    strokeGroups(ctx, segs, 0, upTo, S, ink, 1);
+  }
+
+  ctx.beginPath();
+  ctx.arc(segs[0].x0 * S, segs[0].y0 * S, Math.max(1.5, S * 0.007), 0, Math.PI * 2);
+  ctx.strokeStyle = rgba(ink.hi, 0.7);
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  const last = segs[segs.length - 1];
+  ctx.beginPath();
+  ctx.arc(last.x1 * S, last.y1 * S, Math.max(1, S * 0.004), 0, Math.PI * 2);
+  ctx.fillStyle = rgba(ink.hi, 0.8);
+  ctx.fill();
+
+  if (playing && upTo > 0) {
+    const h = segs[upTo - 1];
+    ctx.beginPath();
+    ctx.arc(h.x1 * S, h.y1 * S, Math.max(2, S * 0.009), 0, Math.PI * 2);
+    ctx.fillStyle = rgba(ink.hi, 0.95);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(h.x1 * S, h.y1 * S, Math.max(4, S * 0.02), 0, Math.PI * 2);
+    ctx.strokeStyle = rgba(ink.hi, 0.3);
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+}
+
+/* ---------- audio ---------- */
+
+let ac = null, master = null;
+let current = null;
+let buffers = [];
+let envAnim = null;
+let lastPlayed = null;
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+function ensureAudio() {
+  if (!ac) {
+    ac = new (window.AudioContext || window.webkitAudioContext)();
+    const comp = ac.createDynamicsCompressor();
+    comp.threshold.value = -10;
+    comp.knee.value = 12;
+    comp.ratio.value = 4;
+    comp.attack.value = 0.003;
+    comp.release.value = 0.25;
+    master = ac.createGain();
+    master.gain.value = 0.9;
+    master.connect(comp);
+    comp.connect(ac.destination);
+  }
+  if (ac.state === "suspended") ac.resume();
+}
+
+function aWeightDb(f) {
+  const f2 = f * f;
+  const r = 148693636 * f2 * f2 /
+    ((f2 + 424.36) * Math.sqrt((f2 + 11599.29) * (f2 + 544496.41)) * (f2 + 148693636));
+  return 20 * Math.log10(r) + 2.0;
+}
+
+function loudnessGain(freq) {
+  const db = (aWeightDb(1000) - aWeightDb(Math.max(20, freq))) * LOUDNESS_STRENGTH;
+  return Math.pow(10, clamp(db, -8, 8) / 20);
+}
+
+function renderAudio(ph) {
+  const sr = ac.sampleRate;
+  const maxN = Math.floor(MAX_DUR * sr);
+  const minN = Math.floor(MIN_DUR * sr);
+  const data = new Float32Array(maxN);
+  const str = ph.str, P = ph.P;
+  const sratio = P.sync_freq_max / P.sync_freq_min;
+  const iratio = P.intrinsic_freq_max / P.intrinsic_freq_min;
+  let si = P.state0_intrinsic, ss = P.state0_sync, sa = P.state0_amp;
+  let n = 0, ops = 0;
+  const TWO_PI = Math.PI * 2;
+  outer:
+  while (n < minN) {
+    const n0 = n;
+    for (let k = 0; k < str.length; k++) {
+      if (++ops > AUDIO_OPS) break outer;
+      const c = str[k];
+      if (c === "S") ss += P.delta_sync;
+      else if (c === "s") ss -= P.delta_sync;
+      else if (c === "I") si += P.delta_intrinsic;
+      else if (c === "i") si -= P.delta_intrinsic;
+      else if (c === "+") sa += P.delta_amp;
+      else if (c === "-") sa -= P.delta_amp;
+      else {
+        const fs = fold(ss);
+        const sync = P.sync_freq_min * Math.pow(sratio, fs);
+        const len = Math.max(2, Math.round(sr / sync));
+        if (c === "p") {
+          const fi = fold(si), fa = fold(sa);
+          const intr = P.intrinsic_freq_min * Math.pow(iratio, fi);
+          // amp fold compressed into [0.12, 1] so no specimen is entirely mute
+          const amp = (0.12 + 0.88 * fa) * AMP * loudnessGain(sync);
+          const kk = TWO_PI * intr / sync;
+          const m = Math.min(len, maxN - n);
+          for (let j = 0; j < m; j++) {
+            const u = j / len;
+            data[n + j] = clamp(Math.sin(kk * u) * (1 - u) * amp, -1, 1);
+          }
+          n += m;
+        } else {
+          n = Math.min(maxN, n + len);
+        }
+        if (n >= maxN) break outer;
+      }
+    }
+    if (n === n0) break;
+  }
+  const outN = Math.max(n, Math.floor(sr * 0.05));
+  const buf = ac.createBuffer(1, outN, sr);
+  const d = buf.getChannelData(0);
+  d.set(data.subarray(0, n));
+  const F = Math.min(1024, n >> 2);
+  for (let j = 0; j < F; j++) d[n - 1 - j] *= j / F;
+  return buf;
+}
+
+function stopAudio() {
+  if (!current) return;
+  const { src, g } = current;
+  current = null;
+  try {
+    g.gain.cancelScheduledValues(ac.currentTime);
+    g.gain.setTargetAtTime(0, ac.currentTime, 0.012);
+    src.stop(ac.currentTime + 0.08);
+  } catch (e) {}
+}
+
+function clearPlayingUI() {
+  if (envAnim) { cancelAnimationFrame(envAnim); envAnim = null; }
+  document.body.classList.remove("auditioning");
+  for (const c of cards) {
+    c.el.classList.remove("is-playing");
+    c.el.style.removeProperty("--env");
+    c.inner.style.transform = "";
+  }
+  if (lastPlayed != null && cards[lastPlayed]) {
+    drawSpecimen(cards[lastPlayed].canvas, cards[lastPlayed].ph, cards[lastPlayed].ink, null);
+  }
+  lastPlayed = null;
+}
+
+function markPlayingUI(i) {
+  document.body.classList.add("auditioning");
+  const c = cards[i];
+  c.el.classList.add("is-playing");
+  lastPlayed = i;
+  const segs = c.ph.trace.segs;
+  const step = () => {
+    if (!current || current.i !== i) return;
+    const playT = ac.currentTime - current.t0;
+    drawSpecimen(c.canvas, c.ph, c.ink, playT);
+    let env = 0.4;
+    if (segs.length) {
+      const idx = segIndexAt(segs, playT);
+      if (idx > 0) env = 0.15 + 0.8 * segs[idx - 1].fa;
+    }
+    c.el.style.setProperty("--env", env.toFixed(3));
+    if (!reducedMotion.matches) {
+      c.inner.style.transform = "scale(" + (1 + 0.035 * env).toFixed(4) + ")";
+    }
+    if (playT < current.total + 0.05) {
+      envAnim = requestAnimationFrame(step);
+    }
+  };
+  envAnim = requestAnimationFrame(step);
+}
+
+function playIndex(i) {
+  if (exportBusy) return;
+  ensureAudio();
+  if (current && current.i === i) {
+    stopAudio();
+    clearPlayingUI();
+    return;
+  }
+  stopAudio();
+  clearPlayingUI();
+  if (!buffers[i]) buffers[i] = renderAudio(cards[i].ph);
+  const src = ac.createBufferSource();
+  src.buffer = buffers[i];
+  const g = ac.createGain();
+  g.gain.value = 1;
+  src.connect(g);
+  g.connect(master);
+  src.onended = () => {
+    if (current && current.src === src) {
+      current = null;
+      clearPlayingUI();
+    }
+  };
+  current = { i, src, g, t0: ac.currentTime, total: buffers[i].duration };
+  src.start();
+  markPlayingUI(i);
+}
+
+/* ---------- parameter text ---------- */
+
+function fmt(v, dp) { return dp === -1 ? v.toExponential(1) : v.toFixed(dp); }
+
+function paramText(ph) {
+  const R = ph.rules, P = ph.P;
+  const rl = (a, b) => "<b>" + a + "</b> → " + R[a].padEnd(5) + " <b>" + b + "</b> → " + R[b];
+  const b = v => "<b>" + v + "</b>";
+  return rl("p", ".") + "\n" + rl("S", "s") + "\n" + rl("I", "i") + "\n" + rl("+", "-") + "\n" +
+    "intrinsic " + b(fmt(P.intrinsic_freq_min, 1)) + "–" + b(fmt(P.intrinsic_freq_max, 1)) + " Hz\n" +
+    "   Δ " + b(fmt(P.delta_intrinsic, -1)) + " · origin " + b(fmt(P.state0_intrinsic, 2)) + "\n" +
+    "sync      " + b(fmt(P.sync_freq_min, 1)) + "–" + b(fmt(P.sync_freq_max, 1)) + " Hz\n" +
+    "   Δ " + b(fmt(P.delta_sync, -1)) + " · origin " + b(fmt(P.state0_sync, 2)) + "\n" +
+    "amp       Δ " + b(fmt(P.delta_amp, -1)) + " · origin " + b(fmt(P.state0_amp, 2)) + "\n" +
+    "string    " + b(ph.gens) + " gens · " + b(ph.str.length.toLocaleString()) + " sym\n" +
+    "audio     ≈ " + b(ph.audioDur.toFixed(1)) + " s";
+}
+
+function paramPython(ph) {
+  const P = ph.P;
+  const num = v => Number(v.toPrecision(6));
+  return '{"axiom": "p", "rules": ' + JSON.stringify(ph.rules) +
+    ', "kwargs": {"intrinsic_freq_min": ' + num(P.intrinsic_freq_min) +
+    ', "intrinsic_freq_max": ' + num(P.intrinsic_freq_max) +
+    ', "delta_intrinsic": ' + num(P.delta_intrinsic) +
+    ', "sync_freq_min": ' + num(P.sync_freq_min) +
+    ', "sync_freq_max": ' + num(P.sync_freq_max) +
+    ', "delta_sync": ' + num(P.delta_sync) +
+    ', "amp_min": 0.001, "amp_max": 0.999, "delta_amp": ' + num(P.delta_amp) +
+    ', "word_limit": 1000000, "max_duration": 10, "sample_rate": 48000}' +
+    ', "initial_state": {"intrinsic_freq": ' + num(P.state0_intrinsic) +
+    ', "sync_freq": ' + num(P.state0_sync) +
+    ', "amp": ' + num(P.state0_amp) + '}}';
+}
+
+function copyText(text, btn) {
+  const done = () => {
+    const old = btn.textContent;
+    btn.textContent = "COPIED";
+    setTimeout(() => { btn.textContent = old; }, 1200);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done));
+  } else {
+    fallbackCopy(text, done);
+  }
+}
+
+function fallbackCopy(text, done) {
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand("copy"); } catch (e) {}
+  document.body.removeChild(ta);
+  done();
+}
+
+/* ---------- downloads: specimen WAV / PNG / GIF / FILM & session files ---------- */
+
+const APP_ID = "lsys-ga";
+const WELL_BG = "#140c05";
+const PNG_PX = 1600;
+const GIF_PX = 480;
+const FILM_PX = 960;
+let exportBusy = false;
+
+function downloadBlob(blob, name) {
+  if (window.__noDownload) {
+    (window.__downloads = window.__downloads || []).push({ name, size: blob.size, type: blob.type, blob });
+    return;
+  }
+  const u = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = u;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(u), 10000);
+}
+
+function flashBtn(btn, msg) {
+  if (btn.dataset.label === undefined) btn.dataset.label = btn.textContent;
+  btn.textContent = msg;
+  clearTimeout(btn._flashT);
+  btn._flashT = setTimeout(() => { btn.textContent = btn.dataset.label; }, 1400);
+}
+
+function dlButton(label, title, fn) {
+  const b = document.createElement("button");
+  b.className = "btn";
+  b.textContent = label;
+  b.title = title;
+  b.dataset.label = label;
+  b.addEventListener("click", () => fn(b));
+  return b;
+}
+
+function hashGenome(g) {
+  const s = g.map(x => x.toFixed(6)).join(",");
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+function specimenTag(i, genome) {
+  return "gen" + engine.generation + "-fig" + toRoman(i + 1) + "-" + hashGenome(genome).toString(16).padStart(8, "0");
+}
+
+function wavBlob(buf, gain) {
+  const ch = buf.numberOfChannels, len = buf.length, sr = buf.sampleRate;
+  const bytes = 44 + len * ch * 2;
+  const ab = new ArrayBuffer(bytes), dv = new DataView(ab);
+  const wstr = (o, s) => { for (let i = 0; i < s.length; i++) dv.setUint8(o + i, s.charCodeAt(i)); };
+  wstr(0, "RIFF"); dv.setUint32(4, bytes - 8, true); wstr(8, "WAVE");
+  wstr(12, "fmt "); dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, ch, true);
+  dv.setUint32(24, sr, true); dv.setUint32(28, sr * ch * 2, true); dv.setUint16(32, ch * 2, true); dv.setUint16(34, 16, true);
+  wstr(36, "data"); dv.setUint32(40, len * ch * 2, true);
+  const chans = [];
+  for (let c = 0; c < ch; c++) chans.push(buf.getChannelData(c));
+  let o = 44;
+  for (let i = 0; i < len; i++) {
+    for (let c = 0; c < ch; c++) {
+      const v = clamp(chans[c][i] * gain, -1, 1);
+      dv.setInt16(o, v < 0 ? v * 32768 : v * 32767, true);
+      o += 2;
+    }
+  }
+  return new Blob([ab], { type: "audio/wav" });
+}
+
+function saveWavFor(i, genome, ph, btn) {
+  ensureAudio();
+  const blob = wavBlob(renderAudio(ph), 1);
+  downloadBlob(blob, APP_ID + "-" + specimenTag(i, genome) + ".wav");
+  flashBtn(btn, "SAVED");
+}
+
+function savePngFor(i, genome, ph, ink, btn) {
+  const tag = specimenTag(i, genome);
+  const cv = document.createElement("canvas");
+  drawSpecimen(cv, ph, ink, null, PNG_PX);
+  const ctx = cv.getContext("2d");
+  ctx.globalCompositeOperation = "destination-over";
+  ctx.fillStyle = WELL_BG;
+  ctx.fillRect(0, 0, PNG_PX, PNG_PX);
+  cv.toBlob(b => {
+    if (!b) { flashBtn(btn, "FAILED"); return; }
+    downloadBlob(b, APP_ID + "-" + tag + ".png");
+    flashBtn(btn, "SAVED");
+  }, "image/png");
+}
+
+/* ---------- GIF writer: median-cut palette + LZW (GIF89a) ---------- */
+
+function nextTask() {
+  return new Promise(res => {
+    const ch = new MessageChannel();
+    ch.port1.onmessage = () => res();
+    ch.port2.postMessage(0);
+  });
+}
+
+function up5(v) { return (v << 3) | (v >> 2); }
+
+function gifPalette(hist) {
+  const used = [];
+  for (let c = 0; c < 32768; c++) if (hist[c]) used.push(c);
+  const cols = used.map(c => [up5(c >> 10 & 31), up5(c >> 5 & 31), up5(c & 31)]);
+  const cnt = used.map(c => hist[c]);
+  const boxes = [cols.map((_, i) => i)];
+  while (boxes.length < 256) {
+    let bi = -1, bk = 0, bs = 0;
+    for (let b = 0; b < boxes.length; b++) {
+      const box = boxes[b];
+      if (box.length < 2) continue;
+      for (let k = 0; k < 3; k++) {
+        let mn = 255, mx = 0;
+        for (const ci of box) { const v = cols[ci][k]; if (v < mn) mn = v; if (v > mx) mx = v; }
+        if (mx - mn > bs) { bs = mx - mn; bi = b; bk = k; }
+      }
+    }
+    if (bi < 0) break;
+    const box = boxes[bi].slice().sort((a, b) => cols[a][bk] - cols[b][bk]);
+    let tot = 0;
+    for (const ci of box) tot += cnt[ci];
+    let acc = 0, cut = 1;
+    for (let j = 0; j < box.length - 1; j++) {
+      acc += cnt[box[j]];
+      if (acc * 2 >= tot) { cut = j + 1; break; }
+    }
+    boxes[bi] = box.slice(0, cut);
+    boxes.push(box.slice(cut));
+  }
+  const pal = boxes.map(box => {
+    let r = 0, g = 0, b = 0, n = 0;
+    for (const ci of box) { const c = cols[ci], w = cnt[ci]; r += c[0] * w; g += c[1] * w; b += c[2] * w; n += w; }
+    return n ? [Math.round(r / n), Math.round(g / n), Math.round(b / n)] : [0, 0, 0];
+  });
+  const lut = new Int16Array(32768).fill(-1);
+  boxes.forEach((box, p) => { for (const ci of box) lut[used[ci]] = p; });
+  return { pal, lut };
+}
+
+function nearestPal(pal, c555) {
+  const r = up5(c555 >> 10 & 31), g = up5(c555 >> 5 & 31), b = up5(c555 & 31);
+  let best = 0, bd = Infinity;
+  for (let p = 0; p < pal.length; p++) {
+    const dr = r - pal[p][0], dg = g - pal[p][1], db = b - pal[p][2];
+    const d = dr * dr + dg * dg + db * db;
+    if (d < bd) { bd = d; best = p; }
+  }
+  return best;
+}
+
+function gifLzw(indices, out, dict) {
+  out.push(8);
+  dict.fill(-1);
+  const clear = 256, eoi = 257;
+  let codeSize = 9, next = 258;
+  let bitBuf = 0, bitCnt = 0;
+  const body = [];
+  const emit = code => {
+    bitBuf |= code << bitCnt;
+    bitCnt += codeSize;
+    while (bitCnt >= 8) { body.push(bitBuf & 255); bitBuf >>>= 8; bitCnt -= 8; }
+  };
+  emit(clear);
+  let cur = indices[0];
+  for (let i = 1; i < indices.length; i++) {
+    const k = indices[i];
+    const key = (cur << 8) | k;
+    const hit = dict[key];
+    if (hit >= 0) { cur = hit; continue; }
+    emit(cur);
+    if (next === 4096) {
+      emit(clear);
+      dict.fill(-1);
+      next = 258;
+      codeSize = 9;
+    } else {
+      if (next >= (1 << codeSize)) codeSize++;
+      dict[key] = next++;
+    }
+    cur = k;
+  }
+  emit(cur);
+  emit(eoi);
+  if (bitCnt > 0) body.push(bitBuf & 255);
+  for (let p = 0; p < body.length; p += 255) {
+    const nb = Math.min(255, body.length - p);
+    out.push(nb);
+    for (let q = 0; q < nb; q++) out.push(body[p + q]);
+  }
+  out.push(0);
+}
+
+async function encodeGif(renderAt, size, dur, btn) {
+  const maxF = 360;
+  let fps = 15;
+  if (dur * fps > maxF) fps = maxF / dur;
+  const delay = Math.max(3, Math.round(100 / fps));
+  const step = delay / 100;
+  const n = Math.min(maxF, Math.max(1, Math.round(dur / step)));
+  const times = [];
+  for (let f = 0; f < n; f++) times.push(f * step);
+  times.push(dur);
+  const cv = document.createElement("canvas");
+  cv.width = size;
+  cv.height = size;
+  const ctx = cv.getContext("2d", { willReadFrequently: true });
+  const grab = t => {
+    renderAt(t, cv, size);
+    ctx.globalCompositeOperation = "destination-over";
+    ctx.fillStyle = WELL_BG;
+    ctx.fillRect(0, 0, size, size);
+    ctx.globalCompositeOperation = "source-over";
+    return ctx.getImageData(0, 0, size, size).data;
+  };
+  const hist = new Uint32Array(32768);
+  const hStride = Math.max(1, Math.floor(times.length / 20));
+  const hFrames = [];
+  for (let f = 0; f < times.length; f += hStride) hFrames.push(f);
+  if (hFrames[hFrames.length - 1] !== times.length - 1) hFrames.push(times.length - 1);
+  for (const f of hFrames) {
+    const d = grab(times[f]);
+    for (let p = 0; p < d.length; p += 4) hist[(d[p] & 248) << 7 | (d[p + 1] & 248) << 2 | d[p + 2] >> 3]++;
+    await nextTask();
+  }
+  const pq = gifPalette(hist);
+  const head = [0x47, 0x49, 0x46, 0x38, 0x39, 0x61, size & 255, size >> 8, size & 255, size >> 8, 0xF7, 0, 0];
+  for (let p = 0; p < 256; p++) {
+    const c = pq.pal[p] || [0, 0, 0];
+    head.push(c[0], c[1], c[2]);
+  }
+  const ns = "NETSCAPE2.0";
+  head.push(0x21, 0xFF, 0x0B);
+  for (let q = 0; q < ns.length; q++) head.push(ns.charCodeAt(q));
+  head.push(3, 1, 0, 0, 0);
+  const parts = [Uint8Array.from(head)];
+  const dict = new Int32Array(1 << 20);
+  const idx = new Uint8Array(size * size);
+  for (let f = 0; f < times.length; f++) {
+    const d = grab(times[f]);
+    for (let p = 0, q = 0; p < d.length; p += 4, q++) {
+      const c = (d[p] & 248) << 7 | (d[p + 1] & 248) << 2 | d[p + 2] >> 3;
+      let v = pq.lut[c];
+      if (v < 0) { v = nearestPal(pq.pal, c); pq.lut[c] = v; }
+      idx[q] = v;
+    }
+    const dly = f === times.length - 1 ? 200 : delay;
+    const fb = [0x21, 0xF9, 4, 4, dly & 255, dly >> 8, 0, 0, 0x2C, 0, 0, 0, 0, size & 255, size >> 8, size & 255, size >> 8, 0];
+    gifLzw(idx, fb, dict);
+    parts.push(Uint8Array.from(fb));
+    btn.textContent = Math.round(100 * (f + 1) / times.length) + "%";
+    await nextTask();
+  }
+  parts.push(Uint8Array.from([0x3B]));
+  return new Blob(parts, { type: "image/gif" });
+}
+
+async function saveGifFor(i, genome, renderAt, dur, btn) {
+  if (exportBusy) return;
+  exportBusy = true;
+  const tag = specimenTag(i, genome);
+  try {
+    const blob = await encodeGif(renderAt, GIF_PX, dur, btn);
+    downloadBlob(blob, APP_ID + "-" + tag + ".gif");
+    flashBtn(btn, "SAVED");
+  } catch (e) {
+    flashBtn(btn, "FAILED");
+  } finally {
+    exportBusy = false;
+  }
+}
+
+/* ---------- FILM: real-time canvas + audio capture ---------- */
+
+async function filmFor(i, genome, getBuffer, renderAt, btn) {
+  if (exportBusy) return;
+  if (!window.MediaRecorder || !document.createElement("canvas").captureStream) {
+    flashBtn(btn, "NO REC");
+    return;
+  }
+  exportBusy = true;
+  const tag = specimenTag(i, genome);
+  try {
+    ensureAudio();
+    if (ac.state === "suspended") { try { await ac.resume(); } catch (e) {} }
+    if (ac.state !== "running") throw new Error("audio locked");
+    stopAudio();
+    clearPlayingUI();
+    const buf = await getBuffer();
+    const cv = document.createElement("canvas");
+    cv.width = FILM_PX;
+    cv.height = FILM_PX;
+    const ctx = cv.getContext("2d");
+    const paint = t => {
+      renderAt(t, cv, FILM_PX);
+      ctx.globalCompositeOperation = "destination-over";
+      ctx.fillStyle = WELL_BG;
+      ctx.fillRect(0, 0, FILM_PX, FILM_PX);
+      ctx.globalCompositeOperation = "source-over";
+    };
+    paint(0);
+    const stream = cv.captureStream(30);
+    const dest = ac.createMediaStreamDestination();
+    for (const tr of dest.stream.getAudioTracks()) stream.addTrack(tr);
+    const mime = ["video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm", "video/mp4"]
+      .find(m => MediaRecorder.isTypeSupported(m));
+    const rec = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 8e6 } : undefined);
+    const chunks = [];
+    rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+    const stopped = new Promise(res => { rec.onstop = res; });
+    const src = ac.createBufferSource();
+    src.buffer = buf;
+    const g = ac.createGain();
+    src.connect(g);
+    g.connect(dest);
+    g.connect(master);
+    rec.start(250);
+    const t0 = ac.currentTime + 0.08;
+    src.start(t0);
+    const total = buf.duration;
+    await new Promise(res => {
+      let fin = false, raf = 0, iv = 0;
+      const finish = () => {
+        if (fin) return;
+        fin = true;
+        clearInterval(iv);
+        cancelAnimationFrame(raf);
+        res();
+      };
+      const tick = () => {
+        const t = ac.currentTime - t0;
+        paint(clamp(t, 0, total));
+        btn.textContent = "● " + Math.max(0, Math.min(t, total)).toFixed(1) + "s";
+        if (t >= total + 0.3) finish();
+      };
+      const loop = () => {
+        if (fin) return;
+        tick();
+        raf = requestAnimationFrame(loop);
+      };
+      iv = setInterval(tick, 500);
+      loop();
+    });
+    try { src.stop(); } catch (e) {}
+    g.disconnect();
+    rec.stop();
+    await stopped;
+    if (!chunks.length) throw new Error("no data");
+    const type = rec.mimeType || mime || "video/webm";
+    const ext = type.indexOf("mp4") >= 0 ? ".mp4" : ".webm";
+    downloadBlob(new Blob(chunks, { type: type.split(";")[0] }), APP_ID + "-" + tag + ext);
+    flashBtn(btn, "SAVED");
+  } catch (e) {
+    flashBtn(btn, "FAILED");
+  } finally {
+    exportBusy = false;
+  }
+}
+
+/* ---------- session save / load ---------- */
+
+function numIn(v, lo, hi, fb, int) {
+  v = Number(v);
+  if (!isFinite(v)) return fb;
+  v = clamp(v, lo, hi);
+  return int ? Math.round(v) : v;
+}
+
+function sessionPayload() {
+  // capture the grammar that decoded the current population BEFORE reading the
+  // sliders — a pending (un-evolved) word-length tweak must not change how the
+  // saved genomes decode on load
+  const grammar = { ...engine.grammar };
+  readSettings();
+  return {
+    app: APP_ID,
+    type: "session",
+    version: 1,
+    saved: new Date().toISOString(),
+    generation: engine.generation,
+    eliteCount: lastEliteCount,
+    settings: {
+      popSize: engine.popSize,
+      mutationProb: engine.mutationProb,
+      mutationSigma: engine.mutationSigma,
+      elitism: engine.elitism,
+      selectionMode: engine.selectionMode,
+      selectionParams: { ...engine.selectionParams },
+      crossoverType: engine.crossoverType,
+      crossoverParams: { ...engine.crossoverParams },
+      grammar
+    },
+    population: engine.population,
+    fitness: engine.fitness
+  };
+}
+
+function saveSessionFlow(btn) {
+  const payload = sessionPayload();
+  const d = new Date(), p2 = x => String(x).padStart(2, "0");
+  const nm = APP_ID + "-session-gen" + engine.generation + "-"
+    + d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate()) + "-"
+    + p2(d.getHours()) + p2(d.getMinutes()) + p2(d.getSeconds()) + ".json";
+  downloadBlob(new Blob([JSON.stringify(payload, null, 1)], { type: "application/json" }), nm);
+  flashBtn(btn, "SAVED ✓");
+}
+
+function importSessionText(text) {
+  let d;
+  try { d = JSON.parse(text); } catch (e) { return null; }
+  if (!d || typeof d !== "object") return null;
+  if (d.app !== APP_ID) return d.app ? "wrong" : null;
+  if (!Array.isArray(d.population)) return null;
+  const pop = [];
+  for (const g of d.population) {
+    if (!Array.isArray(g) || g.length !== GENES) continue;
+    pop.push(g.map(v => numIn(v, 0, 1, 0)));
+  }
+  if (!pop.length) return null;
+  const s = d.settings || {};
+  engine.mutationProb = numIn(s.mutationProb, 0, 1, engine.mutationProb);
+  engine.mutationSigma = numIn(s.mutationSigma, 0, 0.5, engine.mutationSigma);
+  engine.elitism = numIn(s.elitism, 0, 10, engine.elitism, true);
+  engine.popSize = numIn(s.popSize, 4, 32, clamp(pop.length, 4, 32), true);
+  if (["prob", "tournament", "roulette"].indexOf(s.selectionMode) >= 0) engine.selectionMode = s.selectionMode;
+  const sp = s.selectionParams || {};
+  engine.selectionParams.rounds = numIn(sp.rounds, 1, 10, engine.selectionParams.rounds, true);
+  engine.selectionParams.k = numIn(sp.k, 2, 32, engine.selectionParams.k, true);
+  engine.selectionParams.keep_frac = numIn(sp.keep_frac, 0.05, 1, engine.selectionParams.keep_frac);
+  engine.selectionParams.power = numIn(sp.power, 0.1, 3, engine.selectionParams.power);
+  if (["uniform", "single_point", "arithmetic"].indexOf(s.crossoverType) >= 0) engine.crossoverType = s.crossoverType;
+  const cp = s.crossoverParams || {};
+  engine.crossoverParams.p_swap = numIn(cp.p_swap, 0, 1, engine.crossoverParams.p_swap);
+  engine.crossoverParams.point = numIn(cp.point, 1, GENES - 1, engine.crossoverParams.point, true);
+  engine.crossoverParams.alpha = numIn(cp.alpha, 0, 1, engine.crossoverParams.alpha);
+  const gr = s.grammar || {};
+  engine.grammar.wordMin = numIn(gr.wordMin, 1, 4, engine.grammar.wordMin, true);
+  engine.grammar.wordMax = numIn(gr.wordMax, 1, 4, engine.grammar.wordMax, true);
+  if (engine.grammar.wordMin > engine.grammar.wordMax) engine.grammar.wordMax = engine.grammar.wordMin;
+  engine.population = pop;
+  engine.fitness = pop.map((_, i) => numIn(Array.isArray(d.fitness) ? d.fitness[i] : 0, 0, 1, 0));
+  engine.generation = numIn(d.generation, 0, 1e9, 0, true);
+  lastEliteCount = numIn(d.eliteCount, 0, pop.length, 0, true);
+  buffers = [];
+  writeSettingsToUI();
+  updateGenLabels();
+  renderGrid();
+  return true;
+}
+
+function writeSettingsToUI() {
+  setPair(mutP, mutPN, engine.mutationProb);
+  setPair(mutS, mutSN, engine.mutationSigma);
+  setPair(popS, popSN, engine.popSize);
+  setPair(elit, elitN, engine.elitism);
+  setPair(wMinR, wMinN, engine.grammar.wordMin);
+  setPair(wMaxR, wMaxN, engine.grammar.wordMax);
+  els.selMode.value = engine.selectionMode;
+  buildSelectionParams();
+  els.xType.value = engine.crossoverType;
+  buildCrossoverParams();
+}
+
+/* ---------- UI scaffolding ---------- */
+
+const els = {
+  plate: document.getElementById("plate"),
+  genNum: document.getElementById("genNum"),
+  genEcho: document.getElementById("genEcho"),
+  evolveBtn: document.getElementById("evolveBtn"),
+  resetBtn: document.getElementById("resetBtn"),
+  selMode: document.getElementById("selMode"),
+  selParams: document.getElementById("selParams"),
+  selCap: document.getElementById("selCap"),
+  xType: document.getElementById("xType"),
+  xParams: document.getElementById("xParams"),
+  xCap: document.getElementById("xCap"),
+  saveBtn: document.getElementById("saveBtn"),
+  loadBtn: document.getElementById("loadBtn"),
+  loadFile: document.getElementById("loadFile")
+};
+
+let cards = [];
+
+function bindPair(rangeEl, numEl, opts, onChange) {
+  const snap = v => {
+    let x = parseFloat(v);
+    if (isNaN(x)) x = opts.fallback;
+    x = clamp(x, opts.min, opts.max);
+    if (opts.int) x = Math.round(x);
+    return x;
+  };
+  rangeEl.addEventListener("input", () => {
+    const v = snap(rangeEl.value);
+    numEl.value = v;
+    onChange(v);
+  });
+  numEl.addEventListener("change", () => {
+    const v = snap(numEl.value);
+    numEl.value = v;
+    rangeEl.value = v;
+    onChange(v);
+  });
+  return () => snap(numEl.value);
+}
+
+function paramRow(labelText, opts) {
+  const row = document.createElement("div");
+  row.className = "prow";
+  const label = document.createElement("label");
+  label.textContent = labelText;
+  const pair = document.createElement("div");
+  pair.className = "pair";
+  const range = document.createElement("input");
+  range.type = "range";
+  range.min = opts.min; range.max = opts.max; range.step = opts.step; range.value = opts.value;
+  const num = document.createElement("input");
+  num.type = "number";
+  num.min = opts.min; num.max = opts.max; num.step = opts.step; num.value = opts.value;
+  num.setAttribute("aria-label", labelText);
+  pair.append(range, num);
+  row.append(label, pair);
+  const read = bindPair(range, num, { min: opts.min, max: opts.max, int: opts.int, fallback: opts.value }, opts.onChange || (() => {}));
+  return { row, read };
+}
+
+const SEL_CAPTIONS = {
+  prob: "Every specimen flips a coin weighted by its own fitness. Extra rounds give each specimen more chances to survive.",
+  tournament: "Random groups of k specimens compete and the fittest of each group survives. Keep sets how much of the population lives on.",
+  roulette: "Survivors are drawn with probability proportional to fitness. Power sharpens the advantage of the strong."
+};
+const X_CAPTIONS = {
+  uniform: "Each gene of a child comes from one parent or the other. Swap sets the odds per gene.",
+  single_point: "Genes before the point come from one parent and the rest come from the other.",
+  arithmetic: "Each child gene is a weighted blend of both parents. Alpha sets the balance between them."
+};
+
+let selReaders = {};
+let xReaders = {};
+
+function buildSelectionParams() {
+  els.selParams.innerHTML = "";
+  els.selCap.textContent = SEL_CAPTIONS[els.selMode.value];
+  selReaders = {};
+  const sp = engine.selectionParams;
+  if (els.selMode.value === "prob") {
+    const r = paramRow("rounds", { min: 1, max: 10, step: 1, value: Math.round(sp.rounds), int: true });
+    els.selParams.append(r.row);
+    selReaders.rounds = r.read;
+  } else if (els.selMode.value === "tournament") {
+    const rk = paramRow("k", { min: 2, max: 32, step: 1, value: Math.round(sp.k), int: true });
+    const rf = paramRow("keep", { min: 0.05, max: 1, step: 0.05, value: sp.keep_frac });
+    els.selParams.append(rk.row, rf.row);
+    selReaders.k = rk.read;
+    selReaders.keep_frac = rf.read;
+  } else {
+    const rf = paramRow("keep", { min: 0.05, max: 1, step: 0.05, value: sp.keep_frac });
+    const rp = paramRow("power", { min: 0.1, max: 3, step: 0.1, value: sp.power });
+    els.selParams.append(rf.row, rp.row);
+    selReaders.keep_frac = rf.read;
+    selReaders.power = rp.read;
+  }
+}
+
+function buildCrossoverParams() {
+  els.xParams.innerHTML = "";
+  els.xCap.textContent = X_CAPTIONS[els.xType.value];
+  xReaders = {};
+  const cp = engine.crossoverParams;
+  if (els.xType.value === "uniform") {
+    const r = paramRow("swap", { min: 0, max: 1, step: 0.01, value: cp.p_swap });
+    els.xParams.append(r.row);
+    xReaders.p_swap = r.read;
+  } else if (els.xType.value === "single_point") {
+    const r = paramRow("point", { min: 1, max: GENES - 1, step: 1, value: Math.round(cp.point), int: true });
+    els.xParams.append(r.row);
+    xReaders.point = r.read;
+  } else {
+    const r = paramRow("alpha", { min: 0, max: 1, step: 0.01, value: cp.alpha });
+    els.xParams.append(r.row);
+    xReaders.alpha = r.read;
+  }
+}
+
+const mutP = document.getElementById("mutP"), mutPN = document.getElementById("mutPN");
+const mutS = document.getElementById("mutS"), mutSN = document.getElementById("mutSN");
+const popS = document.getElementById("popS"), popSN = document.getElementById("popSN");
+const elit = document.getElementById("elit"), elitN = document.getElementById("elitN");
+const wMinR = document.getElementById("wMin"), wMinN = document.getElementById("wMinN");
+const wMaxR = document.getElementById("wMax"), wMaxN = document.getElementById("wMaxN");
+
+function setPair(rangeEl, numEl, v) {
+  rangeEl.value = v;
+  numEl.value = v;
+}
+
+const readMutP = bindPair(mutP, mutPN, { min: 0, max: 1, fallback: 0.1 }, () => {});
+const readMutS = bindPair(mutS, mutSN, { min: 0, max: 0.5, fallback: 0.08 }, () => {});
+const readPopS = bindPair(popS, popSN, { min: 4, max: 32, int: true, fallback: 12 }, () => {});
+const readElit = bindPair(elit, elitN, { min: 0, max: 10, int: true, fallback: 2 }, () => {});
+const readWMin = bindPair(wMinR, wMinN, { min: 1, max: 4, int: true, fallback: 2 }, v => {
+  if (v > parseFloat(wMaxN.value)) setPair(wMaxR, wMaxN, v);
+});
+const readWMax = bindPair(wMaxR, wMaxN, { min: 1, max: 4, int: true, fallback: 3 }, v => {
+  if (v < parseFloat(wMinN.value)) setPair(wMinR, wMinN, v);
+});
+
+els.selMode.addEventListener("change", buildSelectionParams);
+els.xType.addEventListener("change", buildCrossoverParams);
+
+function setVitality(i, v) {
+  cards[i].canvas.style.opacity = (0.55 + 0.45 * clamp(v, 0, 1)).toFixed(3);
+}
+
+function buildCard(i) {
+  const genome = engine.population[i];
+  const ph = buildPhenotype(genome);
+  const ink = inkPair(clamp(genome[B0], 0, 1));
+  const roman = toRoman(i + 1);
+  const card = document.createElement("article");
+  card.className = "specimen born";
+  card.style.animationDelay = (i * 22) + "ms";
+
+  const head = document.createElement("div");
+  head.className = "fig-head";
+  const figNo = document.createElement("span");
+  figNo.className = "fig-no";
+  figNo.textContent = "Fig. " + roman;
+  head.append(figNo);
+  if (engine.generation > 0 && i < lastEliteCount) {
+    const tag = document.createElement("span");
+    tag.className = "elite-tag";
+    tag.textContent = "ELITE";
+    tag.title = "Copied unchanged from the previous generation";
+    head.append(tag);
+  }
+
+  const figBtn = document.createElement("button");
+  figBtn.className = "figure";
+  figBtn.setAttribute("aria-label", "Play specimen " + roman);
+  const inner = document.createElement("div");
+  inner.className = "fig-inner";
+  const canvas = document.createElement("canvas");
+  const glow = document.createElement("span");
+  glow.className = "glow";
+  glow.style.background = "radial-gradient(circle, " + rgba(ink.hi, 0.4) + " 0%, transparent 62%)";
+  inner.append(canvas, glow);
+  figBtn.append(inner);
+  figBtn.addEventListener("click", () => playIndex(i));
+
+  const rstrip = document.createElement("div");
+  rstrip.className = "rules-strip";
+  for (const k of RULE_KEYS) {
+    const cell = document.createElement("span");
+    cell.className = "rw";
+    cell.title = k + " → " + ph.rules[k];
+    const lhs = document.createElement("b");
+    lhs.textContent = k;
+    cell.append(lhs, "→" + ph.rules[k]);
+    rstrip.append(cell);
+  }
+
+  const genes = document.createElement("div");
+  genes.className = "genes";
+  for (let gi = 0; gi < DRAW_DEFS.length; gi++) {
+    const d = DRAW_DEFS[gi];
+    const cell = document.createElement("span");
+    cell.className = "gene";
+    cell.title = d.name + ": " + fmt(ph.P[d.key], d.dp) + d.unit;
+    const fill = document.createElement("i");
+    fill.style.height = (clamp(genome[B0 + gi], 0, 1) * 100).toFixed(1) + "%";
+    cell.append(fill);
+    genes.append(cell);
+  }
+
+  const fitRow = document.createElement("div");
+  fitRow.className = "fit-row";
+  const fitRange = document.createElement("input");
+  fitRange.type = "range";
+  fitRange.className = "fit";
+  fitRange.min = 0; fitRange.max = 1; fitRange.step = 0.01;
+  fitRange.value = engine.fitness[i];
+  fitRange.setAttribute("aria-label", "Fitness of specimen " + roman);
+  const fitNum = document.createElement("input");
+  fitNum.type = "number";
+  fitNum.min = 0; fitNum.max = 1; fitNum.step = 0.01;
+  fitNum.value = engine.fitness[i];
+  fitNum.setAttribute("aria-label", "Fitness of specimen " + roman);
+  fitRow.append(fitRange, fitNum);
+  bindPair(fitRange, fitNum, { min: 0, max: 1, fallback: 0 }, v => {
+    engine.fitness[i] = v;
+    setVitality(i, v);
+  });
+
+  const pToggle = document.createElement("button");
+  pToggle.className = "p-toggle";
+  pToggle.textContent = "parameters ▾";
+  pToggle.setAttribute("aria-expanded", "false");
+  const pBody = document.createElement("div");
+  pBody.className = "p-body";
+  pBody.hidden = true;
+  const pre = document.createElement("pre");
+  pre.innerHTML = paramText(ph);
+  const copyBtn = document.createElement("button");
+  copyBtn.className = "btn copy-btn";
+  copyBtn.textContent = "COPY PYTHON";
+  copyBtn.addEventListener("click", () => copyText(paramPython(ph), copyBtn));
+  pBody.append(pre, copyBtn);
+  pToggle.addEventListener("click", () => {
+    pBody.hidden = !pBody.hidden;
+    pToggle.textContent = pBody.hidden ? "parameters ▾" : "parameters ▴";
+    pToggle.setAttribute("aria-expanded", String(!pBody.hidden));
+  });
+
+  const dlRow = document.createElement("div");
+  dlRow.className = "dl-row";
+  const renderAt = (t, cv, px) => drawSpecimen(cv, ph, ink, t, px);
+  dlRow.append(
+    dlButton("WAV", "download this specimen's sound as a WAV file", b => saveWavFor(i, genome, ph, b)),
+    dlButton("PNG", "download the finished figure as a high-resolution PNG", b => savePngFor(i, genome, ph, ink, b)),
+    dlButton("GIF", "build an animated GIF of the figure retracing itself (silent)", b => saveGifFor(i, genome, renderAt, ph.audioDur, b)),
+    dlButton("FILM", "record a movie of figure and sound together — runs once through in real time; keep this tab visible", b => filmFor(i, genome, () => renderAudio(ph), renderAt, b))
+  );
+
+  card.append(head, figBtn, rstrip, genes, fitRow, dlRow, pToggle, pBody);
+  return { el: card, canvas, inner, ph, ink };
+}
+
+function renderGrid() {
+  stopAudio();
+  clearPlayingUI();
+  els.plate.innerHTML = "";
+  cards = [];
+  for (let i = 0; i < engine.population.length; i++) {
+    const c = buildCard(i);
+    cards.push(c);
+    els.plate.append(c.el);
+  }
+  requestAnimationFrame(() => {
+    for (let i = 0; i < cards.length; i++) {
+      drawSpecimen(cards[i].canvas, cards[i].ph, cards[i].ink, null);
+      setVitality(i, engine.fitness[i]);
+    }
+  });
+}
+
+function updateGenLabels() {
+  els.genNum.textContent = engine.generation;
+  els.genEcho.textContent = engine.generation;
+}
+
+function readSettings() {
+  engine.mutationProb = readMutP();
+  engine.mutationSigma = readMutS();
+  engine.elitism = readElit();
+  engine.popSize = readPopS();
+  engine.selectionMode = els.selMode.value;
+  for (const key in selReaders) engine.selectionParams[key] = selReaders[key]();
+  engine.crossoverType = els.xType.value;
+  for (const key in xReaders) engine.crossoverParams[key] = xReaders[key]();
+  engine.grammar.wordMin = readWMin();
+  engine.grammar.wordMax = readWMax();
+  if (engine.grammar.wordMin > engine.grammar.wordMax) engine.grammar.wordMax = engine.grammar.wordMin;
+}
+
+els.evolveBtn.addEventListener("click", () => {
+  readSettings();
+  breed();
+  buffers = [];
+  updateGenLabels();
+  renderGrid();
+});
+
+let resetArmed = false, resetTimer = null;
+els.resetBtn.addEventListener("click", () => {
+  if (!resetArmed) {
+    resetArmed = true;
+    els.resetBtn.textContent = "CONFIRM?";
+    els.resetBtn.classList.add("arm");
+    resetTimer = setTimeout(() => {
+      resetArmed = false;
+      els.resetBtn.textContent = "RESET";
+      els.resetBtn.classList.remove("arm");
+    }, 2600);
+    return;
+  }
+  clearTimeout(resetTimer);
+  resetArmed = false;
+  els.resetBtn.textContent = "RESET";
+  els.resetBtn.classList.remove("arm");
+  readSettings();
+  initPopulation();
+  buffers = [];
+  updateGenLabels();
+  renderGrid();
+});
+
+els.saveBtn.addEventListener("click", () => saveSessionFlow(els.saveBtn));
+els.loadBtn.addEventListener("click", () => els.loadFile.click());
+els.loadFile.addEventListener("change", e => {
+  const f = e.target.files && e.target.files[0];
+  e.target.value = "";
+  if (!f) return;
+  if (f.size > 20e6) { flashBtn(els.loadBtn, "TOO BIG"); return; }
+  const rd = new FileReader();
+  rd.onload = () => {
+    const r = importSessionText(String(rd.result));
+    flashBtn(els.loadBtn, r === "wrong" ? "WRONG APP" : (r ? "LOADED ✓" : "BAD FILE"));
+  };
+  rd.readAsText(f);
+});
+
+let resizeTimer = null;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    for (let i = 0; i < cards.length; i++) drawSpecimen(cards[i].canvas, cards[i].ph, cards[i].ink, null);
+  }, 160);
+});
+
+buildSelectionParams();
+buildCrossoverParams();
+initPopulation();
+updateGenLabels();
+renderGrid();
+</script>
+</body>
+</html>

@@ -121,7 +121,9 @@ function kindOf(name) {
 }
 
 // Spaces, #, ? and friends are all legal in filenames and all break a raw URL.
-const urlFor = p => MEDIA_BASE + p.split('/').map(encodeURIComponent).join('/');
+const urlFor = p => /^https?:\/\//.test(p)
+  ? p                                   // already absolute (a big file off-site)
+  : MEDIA_BASE + p.split('/').map(encodeURIComponent).join('/');
 
 function noteEl(msg) {
   const d = document.createElement('div');
@@ -135,26 +137,27 @@ function noteEl(msg) {
 // says something true instead of blaming the codec for a failed download.
 const trouble = { reached: 0, blocked: 0, http: 0, codec: 0, first: '' };
 
-async function diagnose(url, show) {
-  let res;
-  try {
-    res = await fetch(url, { method: 'GET', headers: { Range: 'bytes=0-0' } });
-  } catch (err) {
-    trouble.blocked++;
-    trouble.first = trouble.first || (url + ' — ' + err.message);
-    show("can't reach the media host");
-    return report();
-  }
-  if (!res.ok && res.status !== 206) {
-    trouble.http++;
-    trouble.first = trouble.first || (url + ' — HTTP ' + res.status);
-    show('HTTP ' + res.status + ' from the media host');
-    return report();
-  }
-  trouble.codec++;
-  trouble.first = trouble.first || (url + ' — downloaded but would not decode');
-  show("browser can't decode this file");
-  report();
+function diagnose(url, show) {
+  // fetch() is blocked by CORS on hosts that send no headers, so a fetch
+  // failure would prove nothing. An <img> is exempt: if it can pull the bytes,
+  // the file is reachable and the problem is the codec; if not, it's the host.
+  const probe = new Image();
+  probe.onload = probe.onerror = () => { /* settled below */ };
+  const done = reachable => {
+    if (reachable) {
+      trouble.codec++;
+      trouble.first = trouble.first || (url + ' — reachable, would not decode');
+      show("browser can't decode this file");
+    } else {
+      trouble.blocked++;
+      trouble.first = trouble.first || (url + ' — could not be fetched');
+      show('could not load — check the connection');
+    }
+    report();
+  };
+  probe.onload = () => done(true);
+  probe.onerror = () => done(false);
+  probe.src = url + (url.includes('?') ? '&' : '?') + 'probe=' + Date.now();
 }
 
 let reportTimer;

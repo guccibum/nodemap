@@ -1,0 +1,2050 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GENETIC MELODIES</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&family=VT323&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+:root{
+  --plate:#0b101d;
+  --panel:#101828;
+  --panel2:#131d31;
+  --well:#070c16;
+  --bone:#e6dcc3;
+  --bone-dim:rgba(230,220,195,.6);
+  --line:rgba(230,220,195,.3);
+  --line-faint:rgba(230,220,195,.12);
+  --copper:#cf8f6e;
+  --copper-dim:rgba(207,143,110,.5);
+  --aqua:#7fb3c6;
+  --faded:#56637a;
+  --serif:"IM Fell English",Georgia,"Times New Roman",serif;
+  --sc:"IM Fell English SC",Georgia,serif;
+  --mono:"VT323","Courier New",monospace;
+}
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(1200px 700px at 50% -10%, rgba(30,44,72,.5), transparent 65%),
+    radial-gradient(900px 600px at 85% 105%, rgba(23,34,58,.45), transparent 60%),
+    var(--plate);
+  background-attachment:fixed;
+  color:var(--bone);
+  font-family:var(--serif);
+  font-size:16px;
+  line-height:1.45;
+}
+.scanlines{
+  position:fixed;inset:0;z-index:60;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 1px,transparent 1px 3px);
+  opacity:.1;
+}
+.vignette{
+  position:fixed;inset:0;z-index:59;pointer-events:none;
+  background:radial-gradient(130% 100% at 50% 40%,transparent 60%,rgba(0,0,0,.45));
+}
+main{
+  position:relative;z-index:1;
+  max-width:1280px;margin:0 auto;
+  padding:26px 22px 130px;
+}
+header.top{
+  display:flex;align-items:baseline;justify-content:space-between;
+  gap:18px;flex-wrap:wrap;
+}
+h1{
+  margin:0;
+  font-family:var(--sc);font-weight:400;
+  font-size:clamp(24px,3.6vw,36px);
+  letter-spacing:.16em;
+}
+.hud{display:flex;align-items:center;gap:18px}
+.gen-hud{display:flex;align-items:baseline;gap:8px}
+.gen-hud em{
+  font-family:var(--sc);font-style:normal;font-size:13px;
+  letter-spacing:.18em;color:var(--bone-dim);
+}
+.gen-hud b{
+  font-family:var(--mono);font-weight:400;font-size:30px;
+  color:var(--copper);line-height:1;
+}
+.btn{
+  font-family:var(--sc);font-size:13px;letter-spacing:.14em;
+  color:var(--bone);background:transparent;cursor:pointer;
+  border:1px solid var(--line);outline:1px solid var(--line-faint);outline-offset:2px;
+  padding:7px 16px;
+  transition:color .15s,border-color .15s,background .15s;
+}
+.btn:hover{color:var(--copper);border-color:var(--copper-dim)}
+.btn:focus-visible{outline:2px solid var(--copper);outline-offset:2px}
+.btn.arm{color:var(--plate);background:var(--copper);border-color:var(--copper)}
+.lede{
+  margin:14px 0 0;
+  font-style:italic;color:var(--bone-dim);
+  font-size:15.5px;max-width:64ch;
+}
+.rule{
+  display:flex;align-items:center;gap:16px;
+  margin:22px 0;
+}
+.rule::before,.rule::after{
+  content:"";flex:1;height:1px;
+  background:linear-gradient(90deg,transparent,var(--line));
+}
+.rule::after{background:linear-gradient(90deg,var(--line),transparent)}
+.rule span{color:var(--copper-dim);font-size:15px;line-height:1}
+details.about{
+  margin:18px 0 0;
+  background:linear-gradient(180deg,var(--panel2),var(--panel));
+  border:1px solid var(--line);
+  outline:1px solid var(--line-faint);outline-offset:3px;
+  padding:0;
+}
+details.about summary{
+  cursor:pointer;list-style:none;
+  font-family:var(--sc);font-size:14px;letter-spacing:.16em;
+  padding:12px 18px;color:var(--bone-dim);
+  transition:color .15s;
+}
+details.about summary::-webkit-details-marker{display:none}
+details.about summary::before{content:"❧ ";color:var(--copper-dim)}
+details.about summary:hover{color:var(--copper)}
+details.about[open] summary{border-bottom:1px solid var(--line-faint);color:var(--bone)}
+.about-body{padding:16px 18px 20px;max-width:78ch}
+.about-body p{margin:0 0 14px;font-size:15.5px}
+table.ptable{border-collapse:collapse;width:100%;max-width:560px}
+table.ptable td{
+  padding:5px 14px 5px 0;vertical-align:baseline;
+  border-bottom:1px solid var(--line-faint);
+}
+table.ptable td:first-child{font-family:var(--sc);font-size:13px;letter-spacing:.06em;white-space:nowrap}
+table.ptable td:nth-child(2){font-family:var(--mono);font-size:17px;color:var(--copper);white-space:nowrap}
+table.ptable td:last-child{font-style:italic;color:var(--bone-dim);font-size:14px}
+.controls{
+  display:grid;gap:16px;
+  grid-template-columns:repeat(auto-fit,minmax(228px,1fr));
+  margin-top:20px;
+}
+.card{
+  background:linear-gradient(180deg,var(--panel2),var(--panel));
+  border:1px solid var(--line);
+  outline:1px solid var(--line-faint);outline-offset:3px;
+  padding:14px 16px 16px;
+}
+.card h2{
+  margin:0 0 4px;
+  font-family:var(--sc);font-weight:400;font-size:14px;
+  letter-spacing:.2em;color:var(--bone);
+}
+.card .cap{
+  margin:0 0 12px;
+  font-style:italic;font-size:13.5px;color:var(--bone-dim);
+  min-height:2.6em;
+}
+.prow{margin:10px 0 0}
+.prow label{
+  display:block;font-family:var(--sc);font-size:12px;
+  letter-spacing:.14em;color:var(--bone-dim);margin-bottom:4px;
+}
+.pair{display:flex;align-items:center;gap:10px}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;
+  flex:1;height:22px;background:transparent;cursor:pointer;margin:0;
+}
+input[type=range]::-webkit-slider-runnable-track{
+  height:5px;background:#333f52;
+  border:1px solid rgba(230,220,195,.2);
+}
+input[type=range]::-moz-range-track{
+  height:5px;background:#333f52;
+  border:1px solid rgba(230,220,195,.2);
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:13px;height:13px;border-radius:50%;
+  margin-top:-5px;
+  background:radial-gradient(circle at 50% 38%,#f2ead6,#b3a888);
+  border:1px solid #2a3346;
+}
+input[type=range]::-moz-range-thumb{
+  width:11px;height:11px;border-radius:50%;
+  background:radial-gradient(circle at 50% 38%,#f2ead6,#b3a888);
+  border:1px solid #2a3346;
+}
+input[type=range]:focus-visible{outline:2px solid var(--copper);outline-offset:3px}
+input[type=range].fit::-webkit-slider-runnable-track{
+  background:linear-gradient(90deg,var(--faded),var(--aqua) 68%,var(--copper));
+}
+input[type=range].fit::-moz-range-track{
+  background:linear-gradient(90deg,var(--faded),var(--aqua) 68%,var(--copper));
+}
+input[type=number]{
+  font-family:var(--mono);font-size:18px;color:var(--bone);
+  background:var(--well);border:1px solid var(--line);
+  width:6ch;padding:2px 6px;
+  -moz-appearance:textfield;appearance:textfield;
+}
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]:focus-visible{outline:2px solid var(--copper);outline-offset:1px}
+select{
+  font-family:var(--serif);font-size:15px;color:var(--bone);
+  background:var(--well) url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23cf8f6e' stroke-width='1.4'/%3E%3C/svg%3E") no-repeat right 10px center;
+  border:1px solid var(--line);
+  width:100%;padding:6px 30px 6px 10px;
+  -webkit-appearance:none;appearance:none;cursor:pointer;
+}
+select:focus-visible{outline:2px solid var(--copper);outline-offset:1px}
+#plate{
+  display:grid;gap:18px;
+  grid-template-columns:repeat(auto-fill,minmax(196px,1fr));
+}
+.specimen{
+  background:linear-gradient(180deg,var(--panel2),var(--panel));
+  border:1px solid var(--line);
+  outline:1px solid var(--line-faint);outline-offset:3px;
+  padding:12px 12px 12px;
+  display:flex;flex-direction:column;gap:9px;
+  transition:opacity .3s,border-color .25s,outline-color .25s;
+}
+.specimen.is-playing{
+  border-color:var(--copper-dim);
+  outline-color:rgba(207,143,110,.35);
+}
+body.auditioning #plate .specimen:not(.is-playing){opacity:.32}
+.fig-head{
+  display:flex;align-items:baseline;justify-content:space-between;gap:8px;
+  min-height:18px;
+}
+.fig-no{
+  font-family:var(--sc);font-size:13px;letter-spacing:.12em;
+  color:var(--bone-dim);
+}
+.specimen.is-playing .fig-no{color:var(--copper)}
+.elite-tag{
+  font-family:var(--sc);font-size:10px;letter-spacing:.16em;
+  color:var(--copper);border:1px solid var(--copper-dim);
+  padding:1px 7px;line-height:1.5;
+}
+button.figure{
+  position:relative;display:block;width:100%;
+  aspect-ratio:1/1;padding:0;cursor:pointer;
+  background:var(--well);
+  border:1px solid var(--line-faint);
+}
+button.figure:focus-visible{outline:2px solid var(--copper);outline-offset:2px}
+.fig-inner{position:absolute;inset:0;will-change:transform}
+.fig-inner canvas{
+  position:absolute;inset:0;width:100%;height:100%;display:block;
+  transition:opacity .25s;
+}
+.glow{
+  position:absolute;inset:-6%;pointer-events:none;
+  opacity:var(--env,0);
+  mix-blend-mode:screen;
+}
+.ribbon{
+  display:flex;gap:1px;height:22px;
+}
+.rb{
+  position:relative;overflow:hidden;flex:1 1 0;min-width:3px;
+  background:var(--well);border:1px solid rgba(230,220,195,.2);
+}
+.rb i{
+  position:absolute;left:0;right:0;bottom:0;
+  background:rgba(230,220,195,.5);
+}
+.rb.rest{
+  background:repeating-linear-gradient(45deg,transparent 0 3px,rgba(230,220,195,.13) 3px 4px);
+}
+.rb.on{border-color:var(--copper);box-shadow:0 0 0 1px var(--copper-dim)}
+.fit-row{display:flex;align-items:center;gap:8px}
+.fit-row input[type=number]{width:5.5ch;font-size:17px}
+.p-toggle{
+  align-self:center;
+  font-family:var(--serif);font-style:italic;font-size:13px;
+  color:var(--bone-dim);background:none;border:none;cursor:pointer;
+  padding:1px 6px;
+}
+.p-toggle:hover{color:var(--copper)}
+.p-toggle:focus-visible{outline:2px solid var(--copper);outline-offset:2px}
+.p-body{border-top:1px solid var(--line-faint);padding-top:8px}
+.p-body pre{
+  margin:0 0 8px;
+  font-family:var(--mono);font-size:14px;line-height:1.4;
+  color:var(--bone);white-space:pre;overflow-x:auto;
+}
+.p-body pre b{color:var(--copper);font-weight:400}
+.copy-btn{font-size:11px;padding:4px 12px}
+.dl-row{display:flex;gap:5px;flex-wrap:wrap}
+.dl-row .btn{flex:1 1 40px;font-size:11px;letter-spacing:.08em;padding:4px 2px}
+.evolvebar{
+  position:fixed;left:0;right:0;bottom:0;z-index:50;
+  display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+  gap:12px;
+  padding:12px max(22px,env(safe-area-inset-left)) calc(12px + env(safe-area-inset-bottom)) max(22px,env(safe-area-inset-right));
+  background:rgba(8,12,22,.88);
+  backdrop-filter:blur(6px);
+  border-top:1px solid var(--line-faint);
+}
+.evolvebar .bar-gen{
+  justify-self:start;
+  font-family:var(--mono);font-size:20px;color:var(--bone-dim);
+}
+.evolvebar .bar-gen b{color:var(--copper);font-weight:400}
+#evolveBtn{
+  justify-self:center;
+  font-size:19px;letter-spacing:.24em;
+  padding:11px 46px;
+  color:var(--copper);border-color:var(--copper-dim);
+  outline:1px solid rgba(207,143,110,.25);outline-offset:3px;
+}
+#evolveBtn:hover{background:var(--copper);color:var(--plate)}
+.born{animation:born .45s ease-out backwards}
+@keyframes born{
+  from{opacity:0;transform:translateY(7px)}
+  to{opacity:1;transform:none}
+}
+@media (max-width:560px){
+  #plate{grid-template-columns:repeat(auto-fill,minmax(156px,1fr));gap:14px}
+  .evolvebar .bar-gen{font-size:17px}
+  #evolveBtn{padding:10px 30px;font-size:17px}
+}
+@media (prefers-reduced-motion:reduce){
+  .born{animation:none}
+  .specimen,.fig-inner canvas{transition:none}
+}
+</style>
+</head>
+<body>
+<div class="scanlines" aria-hidden="true"></div>
+<div class="vignette" aria-hidden="true"></div>
+<main>
+  <header class="top">
+    <h1>Genetic Melodies</h1>
+    <div class="hud">
+      <span class="gen-hud"><em>Generation</em> <b id="genNum" aria-live="polite">0</b></span>
+      <button class="btn" id="saveBtn" title="download this session — population, ratings, and settings — as a JSON file">SAVE</button>
+      <button class="btn" id="loadBtn" title="restore a session from its JSON file">LOAD</button>
+      <input id="loadFile" type="file" accept=".json,application/json" hidden>
+      <button class="btn" id="resetBtn">RESET</button>
+    </div>
+  </header>
+  <p class="lede">Click a figure to hear it and set its fitness from 0 to 1. EVOLVE breeds the next generation from those ratings.</p>
+
+  <details class="about">
+    <summary>On the method</summary>
+    <div class="about-body">
+      <p>Every specimen is a melody: a chain of notes and silences sung by a sawtooth wave through three band-pass filters tuned to the formants of a vowel. Each note carries a frequency, a duration, an envelope with a peak position and a curve, a vowel, and a vibrato whose rate and depth glide from a start value to an end value; a silence carries only a duration. Nothing is tempered and nothing is quantized. Frequencies map onto their genes exponentially, so crossover blends two pitches in equal musical ratios and mutation nudges them by ratio steps. The vowel lives on a single gene cut into five bins, ordered u o a e i by rising second formant, so a small mutation drifts to a neighboring vowel and a blend of two parents lands on the vowel between them. Chains vary in length: crossover splices sequences of unequal size, and mutation can insert or delete events. A silent event still carries a hidden pitch, which can resurface when a later mutation turns it back into a note. You are the fitness function. Melodies you rate highly are more likely to survive selection and pass their genes on, so the population adapts to your taste. Each figure is a colonial chain computed from the genome: time runs down the stem, pitch sets each zooid's reach from the axis, duration sets its size, the envelope shapes its trailing tendril, and silences leave the stem bare. Identical genomes always produce identical figures.</p>
+      <table class="ptable">
+        <tr><td>frequency</td><td>110–880 Hz</td><td>pitch of a note, untempered</td></tr>
+        <tr><td>duration</td><td>0.15–1.5 s</td><td>length of a note or a silence</td></tr>
+        <tr><td>envelope peak</td><td>0.02–0.98</td><td>where the note reaches full volume</td></tr>
+        <tr><td>envelope curve</td><td>−4–4</td><td>bend of the rise and fall, 0 is linear</td></tr>
+        <tr><td>vowel</td><td>u · o · a · e · i</td><td>formant filter, the mouth of the note</td></tr>
+        <tr><td>vibrato rate</td><td>0.5–8 Hz, start → end</td><td>speed of the pitch waver</td></tr>
+        <tr><td>vibrato depth</td><td>0–50 ¢, start → end</td><td>width of the pitch waver</td></tr>
+        <tr><td>events</td><td>1–24</td><td>notes and silences in one melody</td></tr>
+      </table>
+      <p>Beneath each figure, <b>WAV</b> saves the melody's sound, <b>PNG</b> its figure at high resolution, <b>GIF</b> the animated performance as a silent loop, and <b>FILM</b> a real-time movie of figure and sound together (keep the tab visible while it records). Files are named by generation, figure, and genome so no two downloads collide. <b>SAVE</b> in the header writes the whole session — population, ratings, and settings — into a JSON file; <b>LOAD</b> restores it exactly.</p>
+    </div>
+  </details>
+
+  <section class="controls" aria-label="Algorithm settings">
+    <div class="card">
+      <h2>Mutation</h2>
+      <p class="cap">After crossover, each gene may change at random. Probability sets how often a gene mutates and sigma sets how far it moves.</p>
+      <div class="prow"><label for="mutP">probability</label>
+        <div class="pair"><input type="range" id="mutP" min="0" max="1" step="0.01" value="0.1"><input type="number" id="mutPN" min="0" max="1" step="0.01" value="0.1" aria-label="Mutation probability"></div>
+      </div>
+      <div class="prow"><label for="mutS">sigma</label>
+        <div class="pair"><input type="range" id="mutS" min="0" max="0.5" step="0.01" value="0.08"><input type="number" id="mutSN" min="0" max="0.5" step="0.01" value="0.08" aria-label="Mutation sigma"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Population</h2>
+      <p class="cap">Size is the number of specimens in each generation. Elites are the top-rated specimens, copied unchanged into the next generation.</p>
+      <div class="prow"><label for="popS">size</label>
+        <div class="pair"><input type="range" id="popS" min="4" max="32" step="1" value="12"><input type="number" id="popSN" min="4" max="32" step="1" value="12" aria-label="Population size"></div>
+      </div>
+      <div class="prow"><label for="elit">elitism</label>
+        <div class="pair"><input type="range" id="elit" min="0" max="10" step="1" value="2"><input type="number" id="elitN" min="0" max="10" step="1" value="2" aria-label="Elitism"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Melody</h2>
+      <p class="cap">Melodies hold between min and max events. Rest sets the chance a new event is silent, and length gives each child a chance to grow or shrink by one event.</p>
+      <div class="prow"><label for="lenMin">min events</label>
+        <div class="pair"><input type="range" id="lenMin" min="1" max="24" step="1" value="5"><input type="number" id="lenMinN" min="1" max="24" step="1" value="5" aria-label="Minimum events"></div>
+      </div>
+      <div class="prow"><label for="lenMax">max events</label>
+        <div class="pair"><input type="range" id="lenMax" min="1" max="24" step="1" value="10"><input type="number" id="lenMaxN" min="1" max="24" step="1" value="10" aria-label="Maximum events"></div>
+      </div>
+      <div class="prow"><label for="restP">rest</label>
+        <div class="pair"><input type="range" id="restP" min="0" max="1" step="0.01" value="0.18"><input type="number" id="restPN" min="0" max="1" step="0.01" value="0.18" aria-label="Rest chance"></div>
+      </div>
+      <div class="prow"><label for="lenMut">length</label>
+        <div class="pair"><input type="range" id="lenMut" min="0" max="1" step="0.01" value="0.1"><input type="number" id="lenMutN" min="0" max="1" step="0.01" value="0.1" aria-label="Length mutation chance"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Selection</h2>
+      <p class="cap" id="selCap"></p>
+      <div class="prow">
+        <select id="selMode" aria-label="Selection method">
+          <option value="prob">Probabilistic</option>
+          <option value="tournament">Tournament</option>
+          <option value="roulette">Roulette</option>
+        </select>
+      </div>
+      <div id="selParams"></div>
+    </div>
+    <div class="card">
+      <h2>Crossover</h2>
+      <p class="cap" id="xCap"></p>
+      <div class="prow">
+        <select id="xType" aria-label="Crossover type">
+          <option value="uniform">Uniform</option>
+          <option value="single_point">Single point</option>
+          <option value="arithmetic">Arithmetic</option>
+        </select>
+      </div>
+      <div id="xParams"></div>
+    </div>
+  </section>
+
+  <div class="rule" aria-hidden="true"><span>❦</span></div>
+
+  <section id="plate" aria-label="Population"></section>
+</main>
+
+<div class="evolvebar">
+  <span class="bar-gen">GEN <b id="genEcho">0</b></span>
+  <button class="btn" id="evolveBtn">EVOLVE</button>
+  <span></span>
+</div>
+
+<script>
+
+const VOWELS = ["u", "o", "a", "e", "i"];
+const FORMANTS = {
+  u: [[350, 40, 0], [600, 60, -20], [2700, 100, -17]],
+  o: [[400, 40, 0], [800, 80, -10], [2600, 100, -12]],
+  a: [[650, 80, 0], [1080, 90, -6], [2650, 120, -7]],
+  e: [[400, 70, 0], [1700, 80, -14], [2600, 100, -12]],
+  i: [[290, 40, 0], [1870, 90, -15], [2800, 100, -18]]
+};
+const EV_DEFS = [
+  { key: "freq",            name: "frequency",           unit: " Hz", min: 110,  max: 880,  dp: 1, map: "exp" },
+  { key: "dur",             name: "duration",            unit: " s",  min: 0.15, max: 1.5,  dp: 3, map: "exp" },
+  { key: "env_pos",         name: "envelope peak",       unit: "",    min: 0.02, max: 0.98, dp: 2, map: "lin" },
+  { key: "env_curve",       name: "envelope curve",      unit: "",    min: -4,   max: 4,    dp: 2, map: "lin" },
+  { key: "vowel",           name: "vowel",               unit: "",    dp: 0, map: "cat", values: VOWELS },
+  { key: "start_vib_rate",  name: "vibrato rate start",  unit: " Hz", min: 0.5,  max: 8,    dp: 1, map: "exp" },
+  { key: "end_vib_rate",    name: "vibrato rate end",    unit: " Hz", min: 0.5,  max: 8,    dp: 1, map: "exp" },
+  { key: "start_vib_depth", name: "vibrato depth start", unit: " ¢",  min: 0,    max: 50,   dp: 1, map: "lin" },
+  { key: "end_vib_depth",   name: "vibrato depth end",   unit: " ¢",  min: 0,    max: 50,   dp: 1, map: "lin" }
+];
+const AMP = 0.3;
+const FORMANT_GAIN = 2.3;
+const LOUDNESS_STRENGTH = 0.6;
+
+function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
+function lerp(a, b, x) { return a + (b - a) * x; }
+
+function evParams(e) {
+  const p = { rest: e.rest };
+  for (let i = 0; i < EV_DEFS.length; i++) {
+    const d = EV_DEFS[i];
+    const x = clamp(e.g[i], 0, 1);
+    if (d.map === "cat") {
+      p[d.key] = d.values[Math.min(d.values.length - 1, Math.floor(x * d.values.length))];
+    } else {
+      p[d.key] = d.map === "exp" ? d.min * Math.pow(d.max / d.min, x) : lerp(d.min, d.max, x);
+    }
+  }
+  return p;
+}
+
+function melodyParams(m) { return m.map(evParams); }
+
+function totalDur(P) {
+  let s = 0;
+  for (const p of P) s += p.dur;
+  return s;
+}
+
+function gauss() {
+  let u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+
+function sampleEvent(restProb) {
+  return { rest: Math.random() < restProb, g: Array.from({ length: EV_DEFS.length }, () => Math.random()) };
+}
+
+function randomMelody() {
+  const { minLen, maxLen, restProb } = engine.melody;
+  const L = minLen + Math.floor(Math.random() * (maxLen - minLen + 1));
+  const m = [];
+  for (let i = 0; i < L; i++) m.push(sampleEvent(restProb));
+  return m;
+}
+
+function cloneEvent(e) { return { rest: e.rest, g: e.g.slice() }; }
+function cloneMelody(m) { return m.map(cloneEvent); }
+
+function crossoverUniform(a, b, pSwap) {
+  const L = Math.random() < 0.5 ? a.length : b.length;
+  const c = [];
+  for (let k = 0; k < L; k++) {
+    let src;
+    if (k < a.length && k < b.length) src = Math.random() < pSwap ? a[k] : b[k];
+    else src = k < a.length ? a[k] : b[k];
+    c.push(cloneEvent(src));
+  }
+  return c;
+}
+
+function crossoverSinglePoint(a, b) {
+  const { minLen, maxLen } = engine.melody;
+  let cand = null;
+  for (let t = 0; t < 8; t++) {
+    const i = a.length > 1 ? 1 + Math.floor(Math.random() * (a.length - 1)) : 1;
+    const j = b.length > 1 ? 1 + Math.floor(Math.random() * (b.length - 1)) : 0;
+    cand = a.slice(0, i).concat(b.slice(j));
+    if (cand.length >= minLen && cand.length <= maxLen) break;
+  }
+  let c = cand.slice(0, maxLen).map(cloneEvent);
+  const pool = a.concat(b);
+  while (c.length < minLen) c.push(cloneEvent(pool[Math.floor(Math.random() * pool.length)]));
+  return c;
+}
+
+function crossoverArithmetic(a, b, alpha) {
+  const { minLen, maxLen } = engine.melody;
+  const L = clamp(Math.round(alpha * a.length + (1 - alpha) * b.length), minLen, maxLen);
+  const c = [];
+  for (let k = 0; k < L; k++) {
+    const ea = a[Math.min(k, a.length - 1)];
+    const eb = b[Math.min(k, b.length - 1)];
+    const g = ea.g.map((v, q) => clamp(alpha * v + (1 - alpha) * eb.g[q], 0, 1));
+    const rest = Math.random() < alpha ? ea.rest : eb.rest;
+    c.push({ rest, g });
+  }
+  return c;
+}
+
+function doCrossover(a, b) {
+  if (engine.crossoverType === "uniform") return crossoverUniform(a, b, engine.crossoverParams.p_swap);
+  if (engine.crossoverType === "single_point") return crossoverSinglePoint(a, b);
+  if (engine.crossoverType === "arithmetic") return crossoverArithmetic(a, b, clamp(engine.crossoverParams.alpha, 0, 1));
+  return crossoverUniform(a, b, 0.5);
+}
+
+function mutate(m, p, sigma) {
+  return m.map(e => {
+    const g = e.g.map(v => {
+      if (Math.random() < p) {
+        v = Math.random() < 0.5 ? v + gauss() * sigma : Math.random();
+      }
+      return clamp(v, 0, 1);
+    });
+    const rest = Math.random() < p ? !e.rest : e.rest;
+    return { rest, g };
+  });
+}
+
+function applyLengthMutation(m) {
+  const { minLen, maxLen, lenMut, restProb } = engine.melody;
+  if (Math.random() < lenMut && m.length < maxLen) {
+    m.splice(Math.floor(Math.random() * (m.length + 1)), 0, sampleEvent(restProb));
+  }
+  if (Math.random() < lenMut && m.length > minLen) {
+    m.splice(Math.floor(Math.random() * m.length), 1);
+  }
+  return m;
+}
+
+function rankIndices(fit) {
+  return [...fit.keys()].sort((a, b) => fit[b] - fit[a]);
+}
+
+function sampleWithoutReplacement(arr, k) {
+  const a = arr.slice();
+  for (let i = 0; i < k; i++) {
+    const j = i + Math.floor(Math.random() * (a.length - i));
+    const t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a.slice(0, k);
+}
+
+function weightedSampleWithoutReplacement(weights, k) {
+  const idx = [...weights.keys()];
+  const w = weights.slice();
+  const chosen = [];
+  while (chosen.length < k && idx.length > 0) {
+    let total = 0;
+    for (const x of w) total += x;
+    let r = Math.random() * total;
+    let pick = w.length - 1;
+    for (let i = 0; i < w.length; i++) {
+      r -= w[i];
+      if (r <= 0) { pick = i; break; }
+    }
+    chosen.push(idx[pick]);
+    idx.splice(pick, 1);
+    w.splice(pick, 1);
+  }
+  return chosen;
+}
+
+const engine = {
+  popSize: 12,
+  mutationProb: 0.1,
+  mutationSigma: 0.08,
+  elitism: 2,
+  crossoverType: "uniform",
+  crossoverParams: { p_swap: 0.5, alpha: 0.5 },
+  selectionMode: "prob",
+  selectionParams: { rounds: 1, k: 3, keep_frac: 0.5, power: 1.0 },
+  melody: { minLen: 5, maxLen: 10, restProb: 0.18, lenMut: 0.1 },
+  generation: 0,
+  population: [],
+  fitness: []
+};
+
+let lastEliteCount = 0;
+
+function initPopulation() {
+  engine.population = [];
+  for (let i = 0; i < engine.popSize; i++) engine.population.push(randomMelody());
+  engine.fitness = new Array(engine.popSize).fill(0);
+  engine.generation = 0;
+  lastEliteCount = 0;
+}
+
+function selectSurvivors() {
+  const n = engine.population.length;
+  const fit = engine.fitness;
+  if (engine.selectionMode === "prob") {
+    const rounds = Math.max(1, Math.round(engine.selectionParams.rounds));
+    const winners = [];
+    for (let i = 0; i < n; i++) {
+      const p = clamp(fit[i], 0, 1);
+      let ok = false;
+      for (let r = 0; r < rounds; r++) {
+        if (Math.random() < p) { ok = true; break; }
+      }
+      if (ok) winners.push(i);
+    }
+    if (winners.length < Math.max(2, engine.elitism)) {
+      return rankIndices(fit).slice(0, Math.max(2, engine.elitism)).map(i => engine.population[i]);
+    }
+    return winners.map(i => engine.population[i]);
+  }
+  if (engine.selectionMode === "tournament") {
+    const k = Math.round(clamp(engine.selectionParams.k, 2, n));
+    const keep = clamp(engine.selectionParams.keep_frac, 0.05, 1);
+    const target = Math.max(engine.elitism, Math.ceil(keep * n));
+    const winners = new Set();
+    const idx = [...Array(n).keys()];
+    let guard = 200 * n;
+    while (winners.size < target && guard-- > 0) {
+      const cand = sampleWithoutReplacement(idx, Math.min(k, n));
+      let best = cand[0];
+      for (const j of cand) if (fit[j] > fit[best]) best = j;
+      winners.add(best);
+      if (winners.size === n) break;
+    }
+    return [...winners].map(i => engine.population[i]);
+  }
+  if (engine.selectionMode === "roulette") {
+    const keep = clamp(engine.selectionParams.keep_frac, 0.05, 1);
+    const power = Math.max(0.1, engine.selectionParams.power);
+    let target = Math.max(engine.elitism, Math.ceil(keep * n));
+    target = Math.min(target, n);
+    let w = fit.map(f => Math.pow(Math.max(0, f), power));
+    if (w.every(x => x === 0)) w = w.map(() => 1);
+    return weightedSampleWithoutReplacement(w, target).map(i => engine.population[i]);
+  }
+  return rankIndices(fit).slice(0, Math.max(2, engine.elitism)).map(i => engine.population[i]);
+}
+
+function chooseParents(survivors) {
+  if (survivors.length >= 2) return sampleWithoutReplacement(survivors, 2);
+  if (survivors.length === 1) return [survivors[0], randomMelody()];
+  return [randomMelody(), randomMelody()];
+}
+
+function breed() {
+  const survivors = selectSurvivors();
+  const order = rankIndices(engine.fitness);
+  const elites = order.slice(0, engine.elitism).map(i => cloneMelody(engine.population[i]));
+  const newPop = elites.slice();
+  while (newPop.length < engine.popSize) {
+    const [a, b] = chooseParents(survivors);
+    let child = doCrossover(a, b);
+    child = mutate(child, engine.mutationProb, engine.mutationSigma);
+    child = applyLengthMutation(child);
+    newPop.push(child);
+  }
+  engine.population = newPop.slice(0, engine.popSize);
+  engine.fitness = new Array(engine.popSize).fill(0);
+  engine.generation += 1;
+  lastEliteCount = Math.min(elites.length, engine.popSize);
+}
+
+function toRoman(n) {
+  const table = [[1000, "M"], [900, "CM"], [500, "D"], [400, "CD"], [100, "C"], [90, "XC"], [50, "L"], [40, "XL"], [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]];
+  let out = "";
+  for (const [v, s] of table) { while (n >= v) { out += s; n -= v; } }
+  return out;
+}
+
+function aWeightDb(f) {
+  const f2 = f * f;
+  const r = 148693636 * f2 * f2 /
+    ((f2 + 424.36) * Math.sqrt((f2 + 11599.29) * (f2 + 544496.41)) * (f2 + 148693636));
+  return 20 * Math.log10(r) + 2.0;
+}
+
+function loudnessGain(freq) {
+  const db = (aWeightDb(1000) - aWeightDb(Math.max(20, freq))) * LOUDNESS_STRENGTH;
+  return Math.pow(10, clamp(db, -8, 8) / 20);
+}
+
+function envShape(pos, c) {
+  if (Math.abs(c) < 1e-4) return pos;
+  return (1 - Math.exp(c * pos)) / (1 - Math.exp(c));
+}
+
+function hashMelody(m) {
+  let s = "";
+  for (const e of m) {
+    s += e.rest ? "r" : "n";
+    for (const v of e.g) s += v.toFixed(6) + ",";
+    s += ";";
+  }
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h >>> 0;
+}
+
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+function inkColor(t) {
+  const lo = [150, 190, 210];
+  const hi = [235, 175, 145];
+  return lo.map((v, i) => Math.round(lerp(v, hi[i], clamp(t, 0, 1))));
+}
+
+function rgba(c, a) { return "rgba(" + c[0] + "," + c[1] + "," + c[2] + "," + a + ")"; }
+
+function avgPitchGene(m) {
+  let s = 0, n = 0;
+  for (const e of m) if (!e.rest) { s += e.g[0]; n++; }
+  return n ? s / n : 0.5;
+}
+
+function drawSpecimen(canvas, m, playT, exportPx) {
+  const dpr = exportPx ? 1 : (window.devicePixelRatio || 1);
+  const cw = canvas.clientWidth || 200;
+  const S = exportPx || Math.max(120, cw);
+  canvas.width = Math.round(S * dpr);
+  canvas.height = Math.round(S * dpr);
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, S, S);
+
+  const P = melodyParams(m);
+  const n = m.length;
+  const total = Math.max(1e-6, totalDur(P));
+  const rng = mulberry32(hashMelody(m));
+  const ink = inkColor(avgPitchGene(m));
+
+  const stemAmp = S * (0.028 + 0.036 * rng());
+  const stemK = (0.55 + 0.95 * rng()) * Math.PI * 2;
+  const stemPh = rng() * Math.PI * 2;
+  const jit = [];
+  for (let k = 0; k < n; k++) jit.push({ a: rng() - 0.5, b: rng(), c: rng() });
+  const tend = [];
+  for (let t = 0; t < 3; t++) tend.push({ dx: (rng() - 0.5) * S * 0.05, l: 0.035 + 0.05 * rng(), sway: (rng() - 0.5) * S * 0.06 });
+
+  const y0 = S * 0.15, y1 = S * 0.90;
+  const cx = S * 0.5;
+  const xAt = u => cx + stemAmp * Math.sin(stemPh + u * stemK);
+  const yAt = u => lerp(y0, y1, u);
+
+  const starts = [];
+  let acc = 0;
+  for (const p of P) { starts.push(acc); acc += p.dur; }
+  const lenScale = clamp(Math.sqrt(9 / Math.max(1, n)), 0.62, 1.15);
+  const tickW = Math.max(0.7, S * 0.0038);
+  const spineW = Math.max(1, S * 0.005);
+
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+
+  for (let k = 0; k < n; k++) {
+    const u0 = starts[k] / total;
+    const u1 = (starts[k] + P[k].dur) / total;
+    ctx.beginPath();
+    for (let s = 0; s <= 5; s++) {
+      const u = lerp(u0, u1, s / 5);
+      if (s === 0) ctx.moveTo(xAt(u), yAt(u));
+      else ctx.lineTo(xAt(u), yAt(u));
+    }
+    if (m[k].rest) {
+      ctx.setLineDash([2.5, 3.5]);
+      ctx.strokeStyle = rgba(ink, 0.42);
+      ctx.lineWidth = tickW;
+    } else {
+      ctx.setLineDash([]);
+      ctx.strokeStyle = rgba(ink, 0.78);
+      ctx.lineWidth = spineW;
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  const hx = xAt(0), hy = y0 - S * 0.052;
+  ctx.beginPath();
+  ctx.moveTo(xAt(0), y0);
+  ctx.lineTo(hx, hy + S * 0.035);
+  ctx.strokeStyle = rgba(ink, 0.7);
+  ctx.lineWidth = tickW;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.ellipse(hx, hy, S * 0.026, S * 0.036, 0, 0, Math.PI * 2);
+  ctx.fillStyle = rgba(ink, 0.12);
+  ctx.fill();
+  ctx.strokeStyle = rgba(ink, 0.85);
+  ctx.lineWidth = Math.max(1, S * 0.0045);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(hx, hy - S * 0.012, S * 0.011, Math.PI * 1.15, Math.PI * 1.85);
+  ctx.strokeStyle = rgba(ink, 0.55);
+  ctx.lineWidth = tickW;
+  ctx.stroke();
+
+  for (const t of tend) {
+    const bx = xAt(1), by = y1;
+    ctx.beginPath();
+    ctx.moveTo(bx, by);
+    ctx.quadraticCurveTo(bx + t.sway, by + S * t.l * 0.6, bx + t.dx, by + S * t.l);
+    ctx.strokeStyle = rgba(ink, 0.38);
+    ctx.lineWidth = tickW;
+    ctx.stroke();
+  }
+
+  const zooidPos = [];
+  for (let k = 0; k < n; k++) {
+    const um = (starts[k] + P[k].dur / 2) / total;
+    const sy = yAt(um), sx = xAt(um);
+    if (m[k].rest) {
+      zooidPos.push(null);
+      const d = S * 0.012;
+      ctx.beginPath();
+      ctx.moveTo(sx, sy - d);
+      ctx.lineTo(sx + d, sy);
+      ctx.lineTo(sx, sy + d);
+      ctx.lineTo(sx - d, sy);
+      ctx.closePath();
+      ctx.strokeStyle = rgba(ink, 0.55);
+      ctx.lineWidth = tickW;
+      ctx.stroke();
+      continue;
+    }
+    const e = m[k], p = P[k];
+    const dx = (e.g[0] - 0.5) * S * 0.5;
+    const zx = sx + dx, zy = sy;
+    const r = S * lerp(0.02, 0.068, e.g[1]) * lenScale;
+    const vi = Math.min(VOWELS.length - 1, Math.floor(clamp(e.g[4], 0, 1) * VOWELS.length));
+    const bellAsp = [0.96, 0.9, 0.78, 0.83, 0.7][vi];
+    const mouthSpan = [0.3, 0.52, 0.92, 0.62, 0.38][vi] * Math.PI;
+    const vrG = (clamp(e.g[5], 0, 1) + clamp(e.g[6], 0, 1)) / 2;
+    const vdG = (clamp(e.g[7], 0, 1) + clamp(e.g[8], 0, 1)) / 2;
+    zooidPos.push({ zx, zy, r });
+
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.quadraticCurveTo((sx + zx) / 2, zy - r * 1.4 * jit[k].a, zx, zy);
+    ctx.strokeStyle = rgba(ink, 0.48);
+    ctx.lineWidth = tickW;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.ellipse(zx, zy, r, r * bellAsp, 0, 0, Math.PI * 2);
+    ctx.fillStyle = rgba(ink, 0.14);
+    ctx.fill();
+    ctx.strokeStyle = rgba(ink, 0.9);
+    ctx.lineWidth = Math.max(1, S * 0.0045);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(zx, zy + r * 0.22, r * 0.5, Math.PI / 2 - mouthSpan / 2, Math.PI / 2 + mouthSpan / 2);
+    ctx.strokeStyle = rgba(ink, 0.5);
+    ctx.lineWidth = tickW;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(zx, zy - r * 0.5, Math.max(0.8, r * 0.1), 0, Math.PI * 2);
+    ctx.fillStyle = rgba(ink, 0.8);
+    ctx.fill();
+    if (r > S * 0.03) {
+      ctx.font = "italic " + Math.max(8, r * 0.9).toFixed(1) + "px 'IM Fell English', Georgia, serif";
+      ctx.fillStyle = rgba(ink, 0.6);
+      ctx.textAlign = dx >= 0 ? "left" : "right";
+      ctx.fillText(VOWELS[vi], zx + (dx >= 0 ? 1 : -1) * r * 1.3, zy - r * 0.6);
+    }
+
+    const dir = p.env_pos < 0.5 ? 1 : -1;
+    const tl = r * (0.7 + 2.6 * Math.abs(p.env_pos - 0.5) * 2);
+    const bend = p.env_curve * 0.13 * (jit[k].c < 0.5 ? 1 : -1);
+    let tx = zx, ty = zy + dir * r * 0.82;
+    let ang = dir * Math.PI / 2;
+    ctx.beginPath();
+    ctx.moveTo(tx, ty);
+    for (let s = 0; s < 4; s++) {
+      ang += bend + Math.sin(jit[k].b * 9 + s) * 0.07;
+      tx += Math.cos(ang) * tl / 4;
+      ty += Math.sin(ang) * tl / 4;
+      ctx.lineTo(tx, ty);
+    }
+    ctx.strokeStyle = rgba(ink, 0.72);
+    ctx.lineWidth = tickW;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(tx, ty, Math.max(0.8, S * 0.0035), 0, Math.PI * 2);
+    ctx.fillStyle = rgba(ink, 0.7);
+    ctx.fill();
+
+    if (vdG > 0.03) {
+      const side = dx >= 0 ? 1 : -1;
+      const fx = zx + side * r * 0.55;
+      const fl = r * (0.7 + 1.6 * vdG);
+      const fw = 1.5 + 3.5 * vrG;
+      const fa = S * 0.0015 + r * 0.32 * vdG;
+      ctx.beginPath();
+      ctx.moveTo(fx, zy + r * 0.55);
+      for (let s = 1; s <= 9; s++) {
+        const u = s / 9;
+        ctx.lineTo(fx + Math.sin(u * fw * Math.PI * 2 + jit[k].b * 6.283) * fa, zy + r * 0.55 + u * fl);
+      }
+      ctx.strokeStyle = rgba(ink, 0.5);
+      ctx.lineWidth = Math.max(0.6, S * 0.0026);
+      ctx.stroke();
+    }
+  }
+
+  if (playT != null && playT >= 0) {
+    const u = clamp(playT / total, 0, 1);
+    let act = -1;
+    for (let k = 0; k < n; k++) {
+      if (playT >= starts[k] && playT < starts[k] + P[k].dur) { act = k; break; }
+    }
+    if (act >= 0 && zooidPos[act]) {
+      const z = zooidPos[act];
+      ctx.beginPath();
+      ctx.ellipse(z.zx, z.zy, z.r * 1.55, z.r * 1.35, 0, 0, Math.PI * 2);
+      ctx.strokeStyle = rgba(ink, 0.4);
+      ctx.lineWidth = Math.max(1, S * 0.004);
+      ctx.stroke();
+    }
+    ctx.beginPath();
+    ctx.arc(xAt(u), yAt(u), Math.max(2, S * 0.009), 0, Math.PI * 2);
+    ctx.fillStyle = rgba(ink, 0.95);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(xAt(u), yAt(u), Math.max(4, S * 0.02), 0, Math.PI * 2);
+    ctx.strokeStyle = rgba(ink, 0.3);
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+}
+
+let ac = null, master = null;
+let current = null;
+let buffers = [];
+let envAnim = null;
+let playToken = 0;
+let lastPlayed = null;
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+function ensureAudio() {
+  if (ac) return;
+  ac = new (window.AudioContext || window.webkitAudioContext)();
+  master = ac.createGain();
+  master.gain.value = 0.9;
+  const comp = ac.createDynamicsCompressor();
+  comp.threshold.value = -10;
+  comp.knee.value = 12;
+  comp.ratio.value = 4;
+  master.connect(comp);
+  comp.connect(ac.destination);
+}
+
+function buildEnvCurve(pos, c, dur, amp) {
+  const N = Math.round(clamp(dur * 300, 24, 480));
+  const a = new Float32Array(N);
+  for (let i = 0; i < N; i++) {
+    const u = i / (N - 1);
+    const v = u <= pos
+      ? envShape(pos <= 0 ? 1 : u / pos, c)
+      : (pos >= 1 ? 0 : 1 - envShape((u - pos) / (1 - pos), c));
+    a[i] = clamp(v, 0, 1) * amp;
+  }
+  a[0] = 0;
+  a[N - 1] = 0;
+  return a;
+}
+
+function renderMelody(m) {
+  const sr = ac.sampleRate;
+  const P = melodyParams(m);
+  const total = Math.max(0.05, totalDur(P));
+  const off = new OfflineAudioContext(1, Math.ceil(total * sr) + 64, sr);
+  let t = 0;
+  for (const p of P) {
+    if (!p.rest) {
+      const osc = off.createOscillator();
+      osc.type = "sawtooth";
+      osc.frequency.value = p.freq;
+      const lfo = off.createOscillator();
+      lfo.type = "sine";
+      lfo.frequency.setValueAtTime(p.start_vib_rate, t);
+      lfo.frequency.linearRampToValueAtTime(p.end_vib_rate, t + p.dur);
+      const dev = c => p.freq * (Math.pow(2, c / 1200) - 1);
+      const lg = off.createGain();
+      lg.gain.setValueAtTime(dev(p.start_vib_depth), t);
+      lg.gain.linearRampToValueAtTime(dev(p.end_vib_depth), t + p.dur);
+      lfo.connect(lg);
+      lg.connect(osc.frequency);
+      const sum = off.createGain();
+      sum.gain.value = FORMANT_GAIN;
+      const bank = FORMANTS[p.vowel];
+      for (let fi = 0; fi < bank.length; fi++) {
+        const [ff, bw, db] = bank[fi];
+        const bp = off.createBiquadFilter();
+        bp.type = "bandpass";
+        let fc = Math.max(ff, p.freq);
+        if (fi === 0) {
+          const kLo = Math.max(1, Math.floor(ff / p.freq));
+          const lo = kLo * p.freq, hi = (kLo + 1) * p.freq;
+          fc = Math.abs(Math.log(lo / ff)) <= Math.abs(Math.log(hi / ff)) ? lo : hi;
+        }
+        const bwEff = Math.max(bw, p.freq * 0.25);
+        bp.frequency.value = fc;
+        bp.Q.value = fc / bwEff;
+        const fg = off.createGain();
+        fg.gain.value = Math.pow(10, db / 20);
+        osc.connect(bp);
+        bp.connect(fg);
+        fg.connect(sum);
+      }
+      const g = off.createGain();
+      g.gain.value = 0;
+      const seg = Math.max(0.01, p.dur - 0.004);
+      g.gain.setValueCurveAtTime(buildEnvCurve(p.env_pos, p.env_curve, p.dur, AMP * loudnessGain(p.freq)), t, seg);
+      sum.connect(g);
+      g.connect(off.destination);
+      osc.start(t);
+      osc.stop(t + p.dur);
+      lfo.start(t);
+      lfo.stop(t + p.dur);
+    }
+    t += p.dur;
+  }
+  return off.startRendering();
+}
+
+function stopAudio() {
+  if (!current) return;
+  const { src, g } = current;
+  current = null;
+  try {
+    g.gain.cancelScheduledValues(ac.currentTime);
+    g.gain.setTargetAtTime(0, ac.currentTime, 0.012);
+    src.stop(ac.currentTime + 0.08);
+  } catch (e) {}
+}
+
+function clearPlayingUI() {
+  if (envAnim) { cancelAnimationFrame(envAnim); envAnim = null; }
+  document.body.classList.remove("auditioning");
+  for (const c of cards) {
+    c.el.classList.remove("is-playing");
+    c.inner.style.transform = "";
+    for (const rb of c.rbs) rb.classList.remove("on");
+  }
+  if (lastPlayed != null && cards[lastPlayed] && engine.population[lastPlayed]) {
+    drawSpecimen(cards[lastPlayed].canvas, engine.population[lastPlayed], null);
+  }
+  lastPlayed = null;
+}
+
+function markPlayingUI(i) {
+  document.body.classList.add("auditioning");
+  const c = cards[i];
+  c.el.classList.add("is-playing");
+  lastPlayed = i;
+  const P = melodyParams(engine.population[i]);
+  const starts = [];
+  let acc = 0;
+  for (const p of P) { starts.push(acc); acc += p.dur; }
+  if (!reducedMotion.matches) c.inner.style.transform = "scale(1.03)";
+  const step = () => {
+    if (!current || current.i !== i) return;
+    const playT = ac.currentTime - current.t0;
+    drawSpecimen(c.canvas, engine.population[i], playT);
+    let act = -1;
+    for (let k = 0; k < starts.length; k++) {
+      if (playT >= starts[k] && playT < starts[k] + P[k].dur) { act = k; break; }
+    }
+    for (let k = 0; k < c.rbs.length; k++) c.rbs[k].classList.toggle("on", k === act);
+    if (playT < current.total + 0.05) {
+      envAnim = requestAnimationFrame(step);
+    }
+  };
+  envAnim = requestAnimationFrame(step);
+}
+
+async function playIndex(i) {
+  if (exportBusy) return;
+  ensureAudio();
+  if (ac.state === "suspended") { try { await ac.resume(); } catch (e) {} }
+  if (current && current.i === i) {
+    stopAudio();
+    clearPlayingUI();
+    return;
+  }
+  stopAudio();
+  clearPlayingUI();
+  const token = ++playToken;
+  if (!buffers[i]) {
+    let buf;
+    try {
+      buf = await renderMelody(engine.population[i]);
+    } catch (e) {
+      return;
+    }
+    if (token !== playToken) return;
+    buffers[i] = buf;
+  }
+  if (token !== playToken || !cards[i]) return;
+  const src = ac.createBufferSource();
+  src.buffer = buffers[i];
+  const g = ac.createGain();
+  g.gain.value = 1;
+  src.connect(g);
+  g.connect(master);
+  src.onended = () => {
+    if (current && current.src === src) {
+      current = null;
+      clearPlayingUI();
+    }
+  };
+  current = { i, src, g, t0: ac.currentTime, total: buffers[i].duration };
+  src.start();
+  markPlayingUI(i);
+}
+
+function fmt(v, dp) { return v.toFixed(dp); }
+
+function paramText(m) {
+  const P = melodyParams(m);
+  const cell = (v, dp, w) => "<b>" + fmt(v, dp).padStart(w) + "</b>";
+  return P.map((p, k) => {
+    const idx = String(k + 1).padStart(2, "0");
+    if (p.rest) return idx + "    rest       " + cell(p.dur, 3, 5) + " s";
+    return idx + "  " + cell(p.freq, 1, 6) + " Hz <b>" + p.vowel + "</b>  " + cell(p.dur, 3, 5) + " s\n" +
+      "     pk " + cell(p.env_pos, 2, 4) + "  crv " + cell(p.env_curve, 2, 5) + "\n" +
+      "     vb " + cell(p.start_vib_rate, 1, 3) + "→" + cell(p.end_vib_rate, 1, 3) + " Hz " + cell(p.start_vib_depth, 1, 4) + "→" + cell(p.end_vib_depth, 1, 4) + " ¢";
+  }).join("\n");
+}
+
+function paramPython(m) {
+  const P = melodyParams(m);
+  const num = v => Number(v.toFixed(6));
+  const parts = P.map(p => {
+    if (p.rest) return '{"type": "rest", "dur": ' + num(p.dur) + '}';
+    return '{"type": "note", "freq": ' + num(p.freq) + ', "dur": ' + num(p.dur) + ', "env_pos": ' + num(p.env_pos) + ', "env_curve": ' + num(p.env_curve) + ', "vowel": "' + p.vowel + '", "start_vib_rate": ' + num(p.start_vib_rate) + ', "end_vib_rate": ' + num(p.end_vib_rate) + ', "start_vib_depth": ' + num(p.start_vib_depth) + ', "end_vib_depth": ' + num(p.end_vib_depth) + '}';
+  });
+  return "[" + parts.join(",\n ") + "]";
+}
+
+function copyText(text, btn) {
+  const done = () => {
+    const old = btn.textContent;
+    btn.textContent = "COPIED";
+    setTimeout(() => { btn.textContent = old; }, 1200);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done));
+  } else {
+    fallbackCopy(text, done);
+  }
+}
+
+function fallbackCopy(text, done) {
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand("copy"); } catch (e) {}
+  document.body.removeChild(ta);
+  done();
+}
+
+/* ---------- downloads: melody WAV / PNG / GIF / FILM & session files ---------- */
+
+const APP_ID = "melody-ga";
+const WELL_BG = "#070c16";
+const PNG_PX = 1600;
+const GIF_PX = 480;
+const FILM_PX = 960;
+let exportBusy = false;
+
+function downloadBlob(blob, name) {
+  if (window.__noDownload) {
+    (window.__downloads = window.__downloads || []).push({ name, size: blob.size, type: blob.type, blob });
+    return;
+  }
+  const u = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = u;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(u), 10000);
+}
+
+function flashBtn(btn, msg) {
+  if (btn.dataset.label === undefined) btn.dataset.label = btn.textContent;
+  btn.textContent = msg;
+  clearTimeout(btn._flashT);
+  btn._flashT = setTimeout(() => { btn.textContent = btn.dataset.label; }, 1400);
+}
+
+function dlButton(label, title, fn) {
+  const b = document.createElement("button");
+  b.className = "btn";
+  b.textContent = label;
+  b.title = title;
+  b.dataset.label = label;
+  b.addEventListener("click", () => fn(b));
+  return b;
+}
+
+function specimenTag(i, m) {
+  return "gen" + engine.generation + "-fig" + toRoman(i + 1) + "-" + hashMelody(m).toString(16).padStart(8, "0");
+}
+
+function wavBlob(buf, gain) {
+  const ch = buf.numberOfChannels, len = buf.length, sr = buf.sampleRate;
+  const bytes = 44 + len * ch * 2;
+  const ab = new ArrayBuffer(bytes), dv = new DataView(ab);
+  const wstr = (o, s) => { for (let i = 0; i < s.length; i++) dv.setUint8(o + i, s.charCodeAt(i)); };
+  wstr(0, "RIFF"); dv.setUint32(4, bytes - 8, true); wstr(8, "WAVE");
+  wstr(12, "fmt "); dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, ch, true);
+  dv.setUint32(24, sr, true); dv.setUint32(28, sr * ch * 2, true); dv.setUint16(32, ch * 2, true); dv.setUint16(34, 16, true);
+  wstr(36, "data"); dv.setUint32(40, len * ch * 2, true);
+  const chans = [];
+  for (let c = 0; c < ch; c++) chans.push(buf.getChannelData(c));
+  let o = 44;
+  for (let i = 0; i < len; i++) {
+    for (let c = 0; c < ch; c++) {
+      const v = clamp(chans[c][i] * gain, -1, 1);
+      dv.setInt16(o, v < 0 ? v * 32768 : v * 32767, true);
+      o += 2;
+    }
+  }
+  return new Blob([ab], { type: "audio/wav" });
+}
+
+async function saveWavFor(i, m, btn) {
+  ensureAudio();
+  const tag = specimenTag(i, m);
+  try {
+    const buf = await renderMelody(m);
+    downloadBlob(wavBlob(buf, 1), APP_ID + "-" + tag + ".wav");
+    flashBtn(btn, "SAVED");
+  } catch (e) {
+    flashBtn(btn, "FAILED");
+  }
+}
+
+function savePngFor(i, m, btn) {
+  const tag = specimenTag(i, m);
+  const cv = document.createElement("canvas");
+  drawSpecimen(cv, m, null, PNG_PX);
+  const ctx = cv.getContext("2d");
+  ctx.globalCompositeOperation = "destination-over";
+  ctx.fillStyle = WELL_BG;
+  ctx.fillRect(0, 0, PNG_PX, PNG_PX);
+  cv.toBlob(b => {
+    if (!b) { flashBtn(btn, "FAILED"); return; }
+    downloadBlob(b, APP_ID + "-" + tag + ".png");
+    flashBtn(btn, "SAVED");
+  }, "image/png");
+}
+
+/* ---------- GIF writer: median-cut palette + LZW (GIF89a) ---------- */
+
+function nextTask() {
+  return new Promise(res => {
+    const ch = new MessageChannel();
+    ch.port1.onmessage = () => res();
+    ch.port2.postMessage(0);
+  });
+}
+
+function up5(v) { return (v << 3) | (v >> 2); }
+
+function gifPalette(hist) {
+  const used = [];
+  for (let c = 0; c < 32768; c++) if (hist[c]) used.push(c);
+  const cols = used.map(c => [up5(c >> 10 & 31), up5(c >> 5 & 31), up5(c & 31)]);
+  const cnt = used.map(c => hist[c]);
+  const boxes = [cols.map((_, i) => i)];
+  while (boxes.length < 256) {
+    let bi = -1, bk = 0, bs = 0;
+    for (let b = 0; b < boxes.length; b++) {
+      const box = boxes[b];
+      if (box.length < 2) continue;
+      for (let k = 0; k < 3; k++) {
+        let mn = 255, mx = 0;
+        for (const ci of box) { const v = cols[ci][k]; if (v < mn) mn = v; if (v > mx) mx = v; }
+        if (mx - mn > bs) { bs = mx - mn; bi = b; bk = k; }
+      }
+    }
+    if (bi < 0) break;
+    const box = boxes[bi].slice().sort((a, b) => cols[a][bk] - cols[b][bk]);
+    let tot = 0;
+    for (const ci of box) tot += cnt[ci];
+    let acc = 0, cut = 1;
+    for (let j = 0; j < box.length - 1; j++) {
+      acc += cnt[box[j]];
+      if (acc * 2 >= tot) { cut = j + 1; break; }
+    }
+    boxes[bi] = box.slice(0, cut);
+    boxes.push(box.slice(cut));
+  }
+  const pal = boxes.map(box => {
+    let r = 0, g = 0, b = 0, n = 0;
+    for (const ci of box) { const c = cols[ci], w = cnt[ci]; r += c[0] * w; g += c[1] * w; b += c[2] * w; n += w; }
+    return n ? [Math.round(r / n), Math.round(g / n), Math.round(b / n)] : [0, 0, 0];
+  });
+  const lut = new Int16Array(32768).fill(-1);
+  boxes.forEach((box, p) => { for (const ci of box) lut[used[ci]] = p; });
+  return { pal, lut };
+}
+
+function nearestPal(pal, c555) {
+  const r = up5(c555 >> 10 & 31), g = up5(c555 >> 5 & 31), b = up5(c555 & 31);
+  let best = 0, bd = Infinity;
+  for (let p = 0; p < pal.length; p++) {
+    const dr = r - pal[p][0], dg = g - pal[p][1], db = b - pal[p][2];
+    const d = dr * dr + dg * dg + db * db;
+    if (d < bd) { bd = d; best = p; }
+  }
+  return best;
+}
+
+function gifLzw(indices, out, dict) {
+  out.push(8);
+  dict.fill(-1);
+  const clear = 256, eoi = 257;
+  let codeSize = 9, next = 258;
+  let bitBuf = 0, bitCnt = 0;
+  const body = [];
+  const emit = code => {
+    bitBuf |= code << bitCnt;
+    bitCnt += codeSize;
+    while (bitCnt >= 8) { body.push(bitBuf & 255); bitBuf >>>= 8; bitCnt -= 8; }
+  };
+  emit(clear);
+  let cur = indices[0];
+  for (let i = 1; i < indices.length; i++) {
+    const k = indices[i];
+    const key = (cur << 8) | k;
+    const hit = dict[key];
+    if (hit >= 0) { cur = hit; continue; }
+    emit(cur);
+    if (next === 4096) {
+      emit(clear);
+      dict.fill(-1);
+      next = 258;
+      codeSize = 9;
+    } else {
+      if (next >= (1 << codeSize)) codeSize++;
+      dict[key] = next++;
+    }
+    cur = k;
+  }
+  emit(cur);
+  emit(eoi);
+  if (bitCnt > 0) body.push(bitBuf & 255);
+  for (let p = 0; p < body.length; p += 255) {
+    const nb = Math.min(255, body.length - p);
+    out.push(nb);
+    for (let q = 0; q < nb; q++) out.push(body[p + q]);
+  }
+  out.push(0);
+}
+
+async function encodeGif(renderAt, size, dur, btn) {
+  const maxF = 360;
+  let fps = 15;
+  if (dur * fps > maxF) fps = maxF / dur;
+  const delay = Math.max(3, Math.round(100 / fps));
+  const step = delay / 100;
+  const n = Math.min(maxF, Math.max(1, Math.round(dur / step)));
+  const times = [];
+  for (let f = 0; f < n; f++) times.push(f * step);
+  times.push(dur);
+  const cv = document.createElement("canvas");
+  cv.width = size;
+  cv.height = size;
+  const ctx = cv.getContext("2d", { willReadFrequently: true });
+  const grab = t => {
+    renderAt(t, cv, size);
+    ctx.globalCompositeOperation = "destination-over";
+    ctx.fillStyle = WELL_BG;
+    ctx.fillRect(0, 0, size, size);
+    ctx.globalCompositeOperation = "source-over";
+    return ctx.getImageData(0, 0, size, size).data;
+  };
+  const hist = new Uint32Array(32768);
+  const hStride = Math.max(1, Math.floor(times.length / 20));
+  const hFrames = [];
+  for (let f = 0; f < times.length; f += hStride) hFrames.push(f);
+  if (hFrames[hFrames.length - 1] !== times.length - 1) hFrames.push(times.length - 1);
+  for (const f of hFrames) {
+    const d = grab(times[f]);
+    for (let p = 0; p < d.length; p += 4) hist[(d[p] & 248) << 7 | (d[p + 1] & 248) << 2 | d[p + 2] >> 3]++;
+    await nextTask();
+  }
+  const pq = gifPalette(hist);
+  const head = [0x47, 0x49, 0x46, 0x38, 0x39, 0x61, size & 255, size >> 8, size & 255, size >> 8, 0xF7, 0, 0];
+  for (let p = 0; p < 256; p++) {
+    const c = pq.pal[p] || [0, 0, 0];
+    head.push(c[0], c[1], c[2]);
+  }
+  const ns = "NETSCAPE2.0";
+  head.push(0x21, 0xFF, 0x0B);
+  for (let q = 0; q < ns.length; q++) head.push(ns.charCodeAt(q));
+  head.push(3, 1, 0, 0, 0);
+  const parts = [Uint8Array.from(head)];
+  const dict = new Int32Array(1 << 20);
+  const idx = new Uint8Array(size * size);
+  for (let f = 0; f < times.length; f++) {
+    const d = grab(times[f]);
+    for (let p = 0, q = 0; p < d.length; p += 4, q++) {
+      const c = (d[p] & 248) << 7 | (d[p + 1] & 248) << 2 | d[p + 2] >> 3;
+      let v = pq.lut[c];
+      if (v < 0) { v = nearestPal(pq.pal, c); pq.lut[c] = v; }
+      idx[q] = v;
+    }
+    const dly = f === times.length - 1 ? 200 : delay;
+    const fb = [0x21, 0xF9, 4, 4, dly & 255, dly >> 8, 0, 0, 0x2C, 0, 0, 0, 0, size & 255, size >> 8, size & 255, size >> 8, 0];
+    gifLzw(idx, fb, dict);
+    parts.push(Uint8Array.from(fb));
+    btn.textContent = Math.round(100 * (f + 1) / times.length) + "%";
+    await nextTask();
+  }
+  parts.push(Uint8Array.from([0x3B]));
+  return new Blob(parts, { type: "image/gif" });
+}
+
+async function saveGifFor(i, m, renderAt, dur, btn) {
+  if (exportBusy) return;
+  exportBusy = true;
+  const tag = specimenTag(i, m);
+  try {
+    const blob = await encodeGif(renderAt, GIF_PX, dur, btn);
+    downloadBlob(blob, APP_ID + "-" + tag + ".gif");
+    flashBtn(btn, "SAVED");
+  } catch (e) {
+    flashBtn(btn, "FAILED");
+  } finally {
+    exportBusy = false;
+  }
+}
+
+/* ---------- FILM: real-time canvas + audio capture ---------- */
+
+async function filmFor(i, m, getBuffer, renderAt, btn) {
+  if (exportBusy) return;
+  if (!window.MediaRecorder || !document.createElement("canvas").captureStream) {
+    flashBtn(btn, "NO REC");
+    return;
+  }
+  exportBusy = true;
+  const tag = specimenTag(i, m);
+  try {
+    ensureAudio();
+    if (ac.state === "suspended") { try { await ac.resume(); } catch (e) {} }
+    if (ac.state !== "running") throw new Error("audio locked");
+    stopAudio();
+    clearPlayingUI();
+    const buf = await getBuffer();
+    const cv = document.createElement("canvas");
+    cv.width = FILM_PX;
+    cv.height = FILM_PX;
+    const ctx = cv.getContext("2d");
+    const paint = t => {
+      renderAt(t, cv, FILM_PX);
+      ctx.globalCompositeOperation = "destination-over";
+      ctx.fillStyle = WELL_BG;
+      ctx.fillRect(0, 0, FILM_PX, FILM_PX);
+      ctx.globalCompositeOperation = "source-over";
+    };
+    paint(0);
+    const stream = cv.captureStream(30);
+    const dest = ac.createMediaStreamDestination();
+    for (const tr of dest.stream.getAudioTracks()) stream.addTrack(tr);
+    const mime = ["video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm", "video/mp4"]
+      .find(m2 => MediaRecorder.isTypeSupported(m2));
+    const rec = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 8e6 } : undefined);
+    const chunks = [];
+    rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+    const stopped = new Promise(res => { rec.onstop = res; });
+    const src = ac.createBufferSource();
+    src.buffer = buf;
+    const g = ac.createGain();
+    src.connect(g);
+    g.connect(dest);
+    g.connect(master);
+    rec.start(250);
+    const t0 = ac.currentTime + 0.08;
+    src.start(t0);
+    const total = buf.duration;
+    await new Promise(res => {
+      let fin = false, raf = 0, iv = 0;
+      const finish = () => {
+        if (fin) return;
+        fin = true;
+        clearInterval(iv);
+        cancelAnimationFrame(raf);
+        res();
+      };
+      const tick = () => {
+        const t = ac.currentTime - t0;
+        paint(clamp(t, 0, total));
+        btn.textContent = "● " + Math.max(0, Math.min(t, total)).toFixed(1) + "s";
+        if (t >= total + 0.3) finish();
+      };
+      const loop = () => {
+        if (fin) return;
+        tick();
+        raf = requestAnimationFrame(loop);
+      };
+      iv = setInterval(tick, 500);
+      loop();
+    });
+    try { src.stop(); } catch (e) {}
+    g.disconnect();
+    rec.stop();
+    await stopped;
+    if (!chunks.length) throw new Error("no data");
+    const type = rec.mimeType || mime || "video/webm";
+    const ext = type.indexOf("mp4") >= 0 ? ".mp4" : ".webm";
+    downloadBlob(new Blob(chunks, { type: type.split(";")[0] }), APP_ID + "-" + tag + ext);
+    flashBtn(btn, "SAVED");
+  } catch (e) {
+    flashBtn(btn, "FAILED");
+  } finally {
+    exportBusy = false;
+  }
+}
+
+/* ---------- session save / load ---------- */
+
+function numIn(v, lo, hi, fb, int) {
+  v = Number(v);
+  if (!isFinite(v)) return fb;
+  v = clamp(v, lo, hi);
+  return int ? Math.round(v) : v;
+}
+
+function sessionPayload() {
+  readSettings();
+  return {
+    app: APP_ID,
+    type: "session",
+    version: 1,
+    saved: new Date().toISOString(),
+    generation: engine.generation,
+    eliteCount: lastEliteCount,
+    settings: {
+      popSize: engine.popSize,
+      mutationProb: engine.mutationProb,
+      mutationSigma: engine.mutationSigma,
+      elitism: engine.elitism,
+      selectionMode: engine.selectionMode,
+      selectionParams: { ...engine.selectionParams },
+      crossoverType: engine.crossoverType,
+      crossoverParams: { ...engine.crossoverParams },
+      melody: { ...engine.melody }
+    },
+    population: engine.population,
+    fitness: engine.fitness
+  };
+}
+
+function saveSessionFlow(btn) {
+  const payload = sessionPayload();
+  const d = new Date(), p2 = x => String(x).padStart(2, "0");
+  const nm = APP_ID + "-session-gen" + engine.generation + "-"
+    + d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate()) + "-"
+    + p2(d.getHours()) + p2(d.getMinutes()) + p2(d.getSeconds()) + ".json";
+  downloadBlob(new Blob([JSON.stringify(payload, null, 1)], { type: "application/json" }), nm);
+  flashBtn(btn, "SAVED ✓");
+}
+
+function importSessionText(text) {
+  let d;
+  try { d = JSON.parse(text); } catch (e) { return null; }
+  if (!d || typeof d !== "object") return null;
+  if (d.app !== APP_ID) return d.app ? "wrong" : null;
+  if (!Array.isArray(d.population)) return null;
+  const pop = [];
+  for (const mel of d.population) {
+    if (!Array.isArray(mel)) continue;
+    const m = [];
+    for (const e of mel.slice(0, 24)) {
+      if (!e || !Array.isArray(e.g) || e.g.length !== EV_DEFS.length) continue;
+      m.push({ rest: !!e.rest, g: e.g.map(v => numIn(v, 0, 1, 0)) });
+    }
+    if (m.length) pop.push(m);
+  }
+  if (!pop.length) return null;
+  const s = d.settings || {};
+  engine.mutationProb = numIn(s.mutationProb, 0, 1, engine.mutationProb);
+  engine.mutationSigma = numIn(s.mutationSigma, 0, 0.5, engine.mutationSigma);
+  engine.elitism = numIn(s.elitism, 0, 10, engine.elitism, true);
+  engine.popSize = numIn(s.popSize, 4, 32, clamp(pop.length, 4, 32), true);
+  if (["prob", "tournament", "roulette"].indexOf(s.selectionMode) >= 0) engine.selectionMode = s.selectionMode;
+  const sp = s.selectionParams || {};
+  engine.selectionParams.rounds = numIn(sp.rounds, 1, 10, engine.selectionParams.rounds, true);
+  engine.selectionParams.k = numIn(sp.k, 2, 32, engine.selectionParams.k, true);
+  engine.selectionParams.keep_frac = numIn(sp.keep_frac, 0.05, 1, engine.selectionParams.keep_frac);
+  engine.selectionParams.power = numIn(sp.power, 0.1, 3, engine.selectionParams.power);
+  if (["uniform", "single_point", "arithmetic"].indexOf(s.crossoverType) >= 0) engine.crossoverType = s.crossoverType;
+  const cp = s.crossoverParams || {};
+  engine.crossoverParams.p_swap = numIn(cp.p_swap, 0, 1, engine.crossoverParams.p_swap);
+  engine.crossoverParams.alpha = numIn(cp.alpha, 0, 1, engine.crossoverParams.alpha);
+  const ml = s.melody || {};
+  engine.melody.minLen = numIn(ml.minLen, 1, 24, engine.melody.minLen, true);
+  engine.melody.maxLen = numIn(ml.maxLen, 1, 24, engine.melody.maxLen, true);
+  if (engine.melody.minLen > engine.melody.maxLen) engine.melody.maxLen = engine.melody.minLen;
+  engine.melody.restProb = numIn(ml.restProb, 0, 1, engine.melody.restProb);
+  engine.melody.lenMut = numIn(ml.lenMut, 0, 1, engine.melody.lenMut);
+  engine.population = pop;
+  engine.fitness = pop.map((_, i) => numIn(Array.isArray(d.fitness) ? d.fitness[i] : 0, 0, 1, 0));
+  engine.generation = numIn(d.generation, 0, 1e9, 0, true);
+  lastEliteCount = numIn(d.eliteCount, 0, pop.length, 0, true);
+  buffers = [];
+  writeSettingsToUI();
+  updateGenLabels();
+  renderGrid();
+  return true;
+}
+
+function writeSettingsToUI() {
+  setPair(mutP, mutPN, engine.mutationProb);
+  setPair(mutS, mutSN, engine.mutationSigma);
+  setPair(popS, popSN, engine.popSize);
+  setPair(elit, elitN, engine.elitism);
+  setPair(lenMinR, lenMinN, engine.melody.minLen);
+  setPair(lenMaxR, lenMaxN, engine.melody.maxLen);
+  setPair(restPR, restPN, engine.melody.restProb);
+  setPair(lenMutR, lenMutN, engine.melody.lenMut);
+  els.selMode.value = engine.selectionMode;
+  buildSelectionParams();
+  els.xType.value = engine.crossoverType;
+  buildCrossoverParams();
+}
+
+const els = {
+  plate: document.getElementById("plate"),
+  genNum: document.getElementById("genNum"),
+  genEcho: document.getElementById("genEcho"),
+  evolveBtn: document.getElementById("evolveBtn"),
+  resetBtn: document.getElementById("resetBtn"),
+  selMode: document.getElementById("selMode"),
+  selParams: document.getElementById("selParams"),
+  selCap: document.getElementById("selCap"),
+  xType: document.getElementById("xType"),
+  xParams: document.getElementById("xParams"),
+  xCap: document.getElementById("xCap"),
+  saveBtn: document.getElementById("saveBtn"),
+  loadBtn: document.getElementById("loadBtn"),
+  loadFile: document.getElementById("loadFile")
+};
+
+let cards = [];
+
+function bindPair(rangeEl, numEl, opts, onChange) {
+  const snap = v => {
+    let x = parseFloat(v);
+    if (isNaN(x)) x = opts.fallback;
+    x = clamp(x, opts.min, opts.max);
+    if (opts.int) x = Math.round(x);
+    return x;
+  };
+  rangeEl.addEventListener("input", () => {
+    const v = snap(rangeEl.value);
+    numEl.value = v;
+    onChange(v);
+  });
+  numEl.addEventListener("change", () => {
+    const v = snap(numEl.value);
+    numEl.value = v;
+    rangeEl.value = v;
+    onChange(v);
+  });
+  return () => snap(numEl.value);
+}
+
+function paramRow(labelText, opts) {
+  const row = document.createElement("div");
+  row.className = "prow";
+  const label = document.createElement("label");
+  label.textContent = labelText;
+  const pair = document.createElement("div");
+  pair.className = "pair";
+  const range = document.createElement("input");
+  range.type = "range";
+  range.min = opts.min; range.max = opts.max; range.step = opts.step; range.value = opts.value;
+  const num = document.createElement("input");
+  num.type = "number";
+  num.min = opts.min; num.max = opts.max; num.step = opts.step; num.value = opts.value;
+  num.setAttribute("aria-label", labelText);
+  pair.append(range, num);
+  row.append(label, pair);
+  const read = bindPair(range, num, { min: opts.min, max: opts.max, int: opts.int, fallback: opts.value }, opts.onChange || (() => {}));
+  return { row, read };
+}
+
+const SEL_CAPTIONS = {
+  prob: "Every melody flips a coin weighted by its own fitness. Extra rounds give each melody more chances to survive.",
+  tournament: "Random groups of k melodies compete and the fittest of each group survives. Keep sets how much of the population lives on.",
+  roulette: "Survivors are drawn with probability proportional to fitness. Power sharpens the advantage of the strong."
+};
+const X_CAPTIONS = {
+  uniform: "Each aligned event of a child comes from one parent or the other, and the child takes its length from one parent at random.",
+  single_point: "Each parent is cut at a random place and the halves are spliced together, so children can change length.",
+  arithmetic: "Aligned events blend their values, and pitches blend in equal ratios. Alpha weighs the first parent."
+};
+
+let selReaders = {};
+let xReaders = {};
+
+function buildSelectionParams() {
+  els.selParams.innerHTML = "";
+  els.selCap.textContent = SEL_CAPTIONS[els.selMode.value];
+  selReaders = {};
+  const sp = engine.selectionParams;
+  if (els.selMode.value === "prob") {
+    const r = paramRow("rounds", { min: 1, max: 10, step: 1, value: Math.round(sp.rounds), int: true });
+    els.selParams.append(r.row);
+    selReaders.rounds = r.read;
+  } else if (els.selMode.value === "tournament") {
+    const rk = paramRow("k", { min: 2, max: 32, step: 1, value: Math.round(sp.k), int: true });
+    const rf = paramRow("keep", { min: 0.05, max: 1, step: 0.05, value: sp.keep_frac });
+    els.selParams.append(rk.row, rf.row);
+    selReaders.k = rk.read;
+    selReaders.keep_frac = rf.read;
+  } else {
+    const rf = paramRow("keep", { min: 0.05, max: 1, step: 0.05, value: sp.keep_frac });
+    const rp = paramRow("power", { min: 0.1, max: 3, step: 0.1, value: sp.power });
+    els.selParams.append(rf.row, rp.row);
+    selReaders.keep_frac = rf.read;
+    selReaders.power = rp.read;
+  }
+}
+
+function buildCrossoverParams() {
+  els.xParams.innerHTML = "";
+  els.xCap.textContent = X_CAPTIONS[els.xType.value];
+  xReaders = {};
+  const cp = engine.crossoverParams;
+  if (els.xType.value === "uniform") {
+    const r = paramRow("swap", { min: 0, max: 1, step: 0.01, value: cp.p_swap });
+    els.xParams.append(r.row);
+    xReaders.p_swap = r.read;
+  } else if (els.xType.value === "arithmetic") {
+    const r = paramRow("alpha", { min: 0, max: 1, step: 0.01, value: cp.alpha });
+    els.xParams.append(r.row);
+    xReaders.alpha = r.read;
+  }
+}
+
+const mutP = document.getElementById("mutP"), mutPN = document.getElementById("mutPN");
+const mutS = document.getElementById("mutS"), mutSN = document.getElementById("mutSN");
+const popS = document.getElementById("popS"), popSN = document.getElementById("popSN");
+const elit = document.getElementById("elit"), elitN = document.getElementById("elitN");
+const lenMinR = document.getElementById("lenMin"), lenMinN = document.getElementById("lenMinN");
+const lenMaxR = document.getElementById("lenMax"), lenMaxN = document.getElementById("lenMaxN");
+const restPR = document.getElementById("restP"), restPN = document.getElementById("restPN");
+const lenMutR = document.getElementById("lenMut"), lenMutN = document.getElementById("lenMutN");
+
+function setPair(rangeEl, numEl, v) {
+  rangeEl.value = v;
+  numEl.value = v;
+}
+
+const readMutP = bindPair(mutP, mutPN, { min: 0, max: 1, fallback: 0.1 }, () => {});
+const readMutS = bindPair(mutS, mutSN, { min: 0, max: 0.5, fallback: 0.08 }, () => {});
+const readPopS = bindPair(popS, popSN, { min: 4, max: 32, int: true, fallback: 12 }, () => {});
+const readElit = bindPair(elit, elitN, { min: 0, max: 10, int: true, fallback: 2 }, () => {});
+const readLenMin = bindPair(lenMinR, lenMinN, { min: 1, max: 24, int: true, fallback: 5 }, v => {
+  if (v > parseFloat(lenMaxN.value)) setPair(lenMaxR, lenMaxN, v);
+});
+const readLenMax = bindPair(lenMaxR, lenMaxN, { min: 1, max: 24, int: true, fallback: 10 }, v => {
+  if (v < parseFloat(lenMinN.value)) setPair(lenMinR, lenMinN, v);
+});
+const readRestP = bindPair(restPR, restPN, { min: 0, max: 1, fallback: 0.18 }, () => {});
+const readLenMut = bindPair(lenMutR, lenMutN, { min: 0, max: 1, fallback: 0.1 }, () => {});
+
+els.selMode.addEventListener("change", buildSelectionParams);
+els.xType.addEventListener("change", buildCrossoverParams);
+
+function setVitality(i, v) {
+  cards[i].canvas.style.opacity = (0.55 + 0.45 * clamp(v, 0, 1)).toFixed(3);
+}
+
+function buildCard(i) {
+  const genome = engine.population[i];
+  const roman = toRoman(i + 1);
+  const card = document.createElement("article");
+  card.className = "specimen born";
+  card.style.animationDelay = (i * 22) + "ms";
+
+  const head = document.createElement("div");
+  head.className = "fig-head";
+  const figNo = document.createElement("span");
+  figNo.className = "fig-no";
+  figNo.textContent = "Fig. " + roman;
+  head.append(figNo);
+  if (engine.generation > 0 && i < lastEliteCount) {
+    const tag = document.createElement("span");
+    tag.className = "elite-tag";
+    tag.textContent = "ELITE";
+    tag.title = "Copied unchanged from the previous generation";
+    head.append(tag);
+  }
+
+  const figBtn = document.createElement("button");
+  figBtn.className = "figure";
+  figBtn.setAttribute("aria-label", "Play melody " + roman);
+  const inner = document.createElement("div");
+  inner.className = "fig-inner";
+  const canvas = document.createElement("canvas");
+  const glow = document.createElement("span");
+  glow.className = "glow";
+  const ink = inkColor(avgPitchGene(genome));
+  glow.style.background = "radial-gradient(circle, " + rgba(ink, 0.4) + " 0%, transparent 62%)";
+  inner.append(canvas, glow);
+  figBtn.append(inner);
+  figBtn.addEventListener("click", () => playIndex(i));
+
+  const ribbon = document.createElement("div");
+  ribbon.className = "ribbon";
+  const P = melodyParams(genome);
+  const rbs = [];
+  for (let k = 0; k < P.length; k++) {
+    const p = P[k];
+    const cell = document.createElement("span");
+    cell.className = "rb" + (p.rest ? " rest" : "");
+    cell.style.flexGrow = p.dur.toFixed(3);
+    if (p.rest) {
+      cell.title = "rest · " + fmt(p.dur, 3) + " s";
+    } else {
+      cell.title = fmt(p.freq, 1) + " Hz (" + p.vowel + ") · " + fmt(p.dur, 3) + " s";
+      const fill = document.createElement("i");
+      fill.style.height = (clamp(genome[k].g[0], 0, 1) * 100).toFixed(1) + "%";
+      cell.append(fill);
+    }
+    rbs.push(cell);
+    ribbon.append(cell);
+  }
+
+  const fitRow = document.createElement("div");
+  fitRow.className = "fit-row";
+  const fitRange = document.createElement("input");
+  fitRange.type = "range";
+  fitRange.className = "fit";
+  fitRange.min = 0; fitRange.max = 1; fitRange.step = 0.01;
+  fitRange.value = engine.fitness[i];
+  fitRange.setAttribute("aria-label", "Fitness of melody " + roman);
+  const fitNum = document.createElement("input");
+  fitNum.type = "number";
+  fitNum.min = 0; fitNum.max = 1; fitNum.step = 0.01;
+  fitNum.value = engine.fitness[i];
+  fitNum.setAttribute("aria-label", "Fitness of melody " + roman);
+  fitRow.append(fitRange, fitNum);
+  bindPair(fitRange, fitNum, { min: 0, max: 1, fallback: 0 }, v => {
+    engine.fitness[i] = v;
+    setVitality(i, v);
+  });
+
+  const pToggle = document.createElement("button");
+  pToggle.className = "p-toggle";
+  pToggle.textContent = "parameters ▾";
+  pToggle.setAttribute("aria-expanded", "false");
+  const pBody = document.createElement("div");
+  pBody.className = "p-body";
+  pBody.hidden = true;
+  const pre = document.createElement("pre");
+  pre.innerHTML = paramText(genome);
+  const copyBtn = document.createElement("button");
+  copyBtn.className = "btn copy-btn";
+  copyBtn.textContent = "COPY PYTHON";
+  copyBtn.addEventListener("click", () => copyText(paramPython(genome), copyBtn));
+  pBody.append(pre, copyBtn);
+  pToggle.addEventListener("click", () => {
+    pBody.hidden = !pBody.hidden;
+    pToggle.textContent = pBody.hidden ? "parameters ▾" : "parameters ▴";
+    pToggle.setAttribute("aria-expanded", String(!pBody.hidden));
+  });
+
+  const dlRow = document.createElement("div");
+  dlRow.className = "dl-row";
+  const renderAt = (t, cv, px) => drawSpecimen(cv, genome, t, px);
+  dlRow.append(
+    dlButton("WAV", "download this melody's sound as a WAV file", b => saveWavFor(i, genome, b)),
+    dlButton("PNG", "download the figure as a high-resolution PNG", b => savePngFor(i, genome, b)),
+    dlButton("GIF", "build an animated GIF of the performance (silent)", b => saveGifFor(i, genome, renderAt, totalDur(P), b)),
+    dlButton("FILM", "record a movie of figure and sound together — runs once through in real time; keep this tab visible", b => filmFor(i, genome, () => renderMelody(genome), renderAt, b))
+  );
+
+  card.append(head, figBtn, ribbon, fitRow, dlRow, pToggle, pBody);
+  return { el: card, canvas, inner, rbs };
+}
+
+function renderGrid() {
+  stopAudio();
+  clearPlayingUI();
+  els.plate.innerHTML = "";
+  cards = [];
+  for (let i = 0; i < engine.population.length; i++) {
+    const c = buildCard(i);
+    cards.push(c);
+    els.plate.append(c.el);
+  }
+  requestAnimationFrame(() => {
+    for (let i = 0; i < cards.length; i++) {
+      drawSpecimen(cards[i].canvas, engine.population[i], null);
+      setVitality(i, engine.fitness[i]);
+    }
+  });
+}
+
+function updateGenLabels() {
+  els.genNum.textContent = engine.generation;
+  els.genEcho.textContent = engine.generation;
+}
+
+function readSettings() {
+  engine.mutationProb = readMutP();
+  engine.mutationSigma = readMutS();
+  engine.elitism = readElit();
+  engine.popSize = readPopS();
+  engine.selectionMode = els.selMode.value;
+  for (const key in selReaders) engine.selectionParams[key] = selReaders[key]();
+  engine.crossoverType = els.xType.value;
+  for (const key in xReaders) engine.crossoverParams[key] = xReaders[key]();
+  engine.melody.minLen = readLenMin();
+  engine.melody.maxLen = readLenMax();
+  if (engine.melody.minLen > engine.melody.maxLen) engine.melody.maxLen = engine.melody.minLen;
+  engine.melody.restProb = readRestP();
+  engine.melody.lenMut = readLenMut();
+}
+
+els.evolveBtn.addEventListener("click", () => {
+  readSettings();
+  breed();
+  buffers = [];
+  updateGenLabels();
+  renderGrid();
+});
+
+let resetArmed = false, resetTimer = null;
+els.resetBtn.addEventListener("click", () => {
+  if (!resetArmed) {
+    resetArmed = true;
+    els.resetBtn.textContent = "CONFIRM?";
+    els.resetBtn.classList.add("arm");
+    resetTimer = setTimeout(() => {
+      resetArmed = false;
+      els.resetBtn.textContent = "RESET";
+      els.resetBtn.classList.remove("arm");
+    }, 2600);
+    return;
+  }
+  clearTimeout(resetTimer);
+  resetArmed = false;
+  els.resetBtn.textContent = "RESET";
+  els.resetBtn.classList.remove("arm");
+  readSettings();
+  initPopulation();
+  buffers = [];
+  updateGenLabels();
+  renderGrid();
+});
+
+els.saveBtn.addEventListener("click", () => saveSessionFlow(els.saveBtn));
+els.loadBtn.addEventListener("click", () => els.loadFile.click());
+els.loadFile.addEventListener("change", e => {
+  const f = e.target.files && e.target.files[0];
+  e.target.value = "";
+  if (!f) return;
+  if (f.size > 20e6) { flashBtn(els.loadBtn, "TOO BIG"); return; }
+  const rd = new FileReader();
+  rd.onload = () => {
+    const r = importSessionText(String(rd.result));
+    flashBtn(els.loadBtn, r === "wrong" ? "WRONG APP" : (r ? "LOADED ✓" : "BAD FILE"));
+  };
+  rd.readAsText(f);
+});
+
+let resizeTimer = null;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    for (let i = 0; i < cards.length; i++) drawSpecimen(cards[i].canvas, engine.population[i], null);
+  }, 160);
+});
+
+buildSelectionParams();
+buildCrossoverParams();
+initPopulation();
+updateGenLabels();
+renderGrid();
+
+</script>
+</body>
+</html>

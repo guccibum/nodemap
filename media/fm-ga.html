@@ -1,0 +1,1351 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FM Synthesis with Genetic Algorithms</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&family=VT323&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+:root{
+  --plate:#0d1813;
+  --panel:#142019;
+  --panel2:#18261e;
+  --well:#0b130f;
+  --bone:#e6dcc3;
+  --bone-dim:rgba(230,220,195,.6);
+  --line:rgba(230,220,195,.3);
+  --line-faint:rgba(230,220,195,.12);
+  --gilt:#c9a763;
+  --gilt-dim:rgba(201,167,99,.5);
+  --verdant:#93b478;
+  --faded:#5d6b62;
+  --serif:"IM Fell English",Georgia,"Times New Roman",serif;
+  --sc:"IM Fell English SC",Georgia,serif;
+  --mono:"VT323","Courier New",monospace;
+}
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(1200px 700px at 50% -10%, rgba(38,64,52,.5), transparent 65%),
+    radial-gradient(900px 600px at 85% 105%, rgba(30,48,40,.45), transparent 60%),
+    var(--plate);
+  background-attachment:fixed;
+  color:var(--bone);
+  font-family:var(--serif);
+  font-size:16px;
+  line-height:1.45;
+}
+.scanlines{
+  position:fixed;inset:0;z-index:60;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 1px,transparent 1px 3px);
+  opacity:.1;
+}
+.vignette{
+  position:fixed;inset:0;z-index:59;pointer-events:none;
+  background:radial-gradient(130% 100% at 50% 40%,transparent 60%,rgba(0,0,0,.45));
+}
+main{
+  position:relative;z-index:1;
+  max-width:1280px;margin:0 auto;
+  padding:26px 22px 130px;
+}
+header.top{
+  display:flex;align-items:baseline;justify-content:space-between;
+  gap:18px;flex-wrap:wrap;
+}
+h1{
+  margin:0;
+  font-family:var(--sc);font-weight:400;
+  font-size:clamp(24px,3.6vw,36px);
+  letter-spacing:.16em;
+}
+.hud{display:flex;align-items:center;gap:18px}
+.gen-hud{display:flex;align-items:baseline;gap:8px}
+.gen-hud em{
+  font-family:var(--sc);font-style:normal;font-size:13px;
+  letter-spacing:.18em;color:var(--bone-dim);
+}
+.gen-hud b{
+  font-family:var(--mono);font-weight:400;font-size:30px;
+  color:var(--gilt);line-height:1;
+}
+.btn{
+  font-family:var(--sc);font-size:13px;letter-spacing:.14em;
+  color:var(--bone);background:transparent;cursor:pointer;
+  border:1px solid var(--line);outline:1px solid var(--line-faint);outline-offset:2px;
+  padding:7px 16px;
+  transition:color .15s,border-color .15s,background .15s;
+}
+.btn:hover{color:var(--gilt);border-color:var(--gilt-dim)}
+.btn:focus-visible{outline:2px solid var(--gilt);outline-offset:2px}
+.btn.arm{color:var(--plate);background:var(--gilt);border-color:var(--gilt)}
+.lede{
+  margin:14px 0 0;
+  font-style:italic;color:var(--bone-dim);
+  font-size:15.5px;max-width:64ch;
+}
+.rule{
+  display:flex;align-items:center;gap:16px;
+  margin:22px 0;
+}
+.rule::before,.rule::after{
+  content:"";flex:1;height:1px;
+  background:linear-gradient(90deg,transparent,var(--line));
+}
+.rule::after{background:linear-gradient(90deg,var(--line),transparent)}
+.rule span{color:var(--gilt-dim);font-size:15px;line-height:1}
+details.about{
+  margin:18px 0 0;
+  background:linear-gradient(180deg,var(--panel2),var(--panel));
+  border:1px solid var(--line);
+  outline:1px solid var(--line-faint);outline-offset:3px;
+  padding:0;
+}
+details.about summary{
+  cursor:pointer;list-style:none;
+  font-family:var(--sc);font-size:14px;letter-spacing:.16em;
+  padding:12px 18px;color:var(--bone-dim);
+  transition:color .15s;
+}
+details.about summary::-webkit-details-marker{display:none}
+details.about summary::before{content:"❧ ";color:var(--gilt-dim)}
+details.about summary:hover{color:var(--gilt)}
+details.about[open] summary{border-bottom:1px solid var(--line-faint);color:var(--bone)}
+.about-body{padding:16px 18px 20px;max-width:78ch}
+.about-body p{margin:0 0 14px;font-size:15.5px}
+table.ptable{border-collapse:collapse;width:100%;max-width:560px}
+table.ptable td{
+  padding:5px 14px 5px 0;vertical-align:baseline;
+  border-bottom:1px solid var(--line-faint);
+}
+table.ptable td:first-child{font-family:var(--sc);font-size:13px;letter-spacing:.06em;white-space:nowrap}
+table.ptable td:nth-child(2){font-family:var(--mono);font-size:17px;color:var(--gilt);white-space:nowrap}
+table.ptable td:last-child{font-style:italic;color:var(--bone-dim);font-size:14px}
+.controls{
+  display:grid;gap:16px;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  margin-top:20px;
+}
+.card{
+  background:linear-gradient(180deg,var(--panel2),var(--panel));
+  border:1px solid var(--line);
+  outline:1px solid var(--line-faint);outline-offset:3px;
+  padding:14px 16px 16px;
+}
+.card h2{
+  margin:0 0 4px;
+  font-family:var(--sc);font-weight:400;font-size:14px;
+  letter-spacing:.2em;color:var(--bone);
+}
+.card .cap{
+  margin:0 0 12px;
+  font-style:italic;font-size:13.5px;color:var(--bone-dim);
+  min-height:2.6em;
+}
+.prow{margin:10px 0 0}
+.prow label{
+  display:block;font-family:var(--sc);font-size:12px;
+  letter-spacing:.14em;color:var(--bone-dim);margin-bottom:4px;
+}
+.pair{display:flex;align-items:center;gap:10px}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;
+  flex:1;height:22px;background:transparent;cursor:pointer;margin:0;
+}
+input[type=range]::-webkit-slider-runnable-track{
+  height:5px;background:#39463e;
+  border:1px solid rgba(230,220,195,.2);
+}
+input[type=range]::-moz-range-track{
+  height:5px;background:#39463e;
+  border:1px solid rgba(230,220,195,.2);
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:13px;height:13px;border-radius:50%;
+  margin-top:-5px;
+  background:radial-gradient(circle at 50% 38%,#f2ead6,#b3a888);
+  border:1px solid #2c382f;
+}
+input[type=range]::-moz-range-thumb{
+  width:11px;height:11px;border-radius:50%;
+  background:radial-gradient(circle at 50% 38%,#f2ead6,#b3a888);
+  border:1px solid #2c382f;
+}
+input[type=range]:focus-visible{outline:2px solid var(--gilt);outline-offset:3px}
+input[type=range].fit::-webkit-slider-runnable-track{
+  background:linear-gradient(90deg,var(--faded),var(--verdant) 68%,var(--gilt));
+}
+input[type=range].fit::-moz-range-track{
+  background:linear-gradient(90deg,var(--faded),var(--verdant) 68%,var(--gilt));
+}
+input[type=number]{
+  font-family:var(--mono);font-size:18px;color:var(--bone);
+  background:var(--well);border:1px solid var(--line);
+  width:6ch;padding:2px 6px;
+  -moz-appearance:textfield;appearance:textfield;
+}
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]:focus-visible{outline:2px solid var(--gilt);outline-offset:1px}
+select{
+  font-family:var(--serif);font-size:15px;color:var(--bone);
+  background:var(--well) url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23c9a763' stroke-width='1.4'/%3E%3C/svg%3E") no-repeat right 10px center;
+  border:1px solid var(--line);
+  width:100%;padding:6px 30px 6px 10px;
+  -webkit-appearance:none;appearance:none;cursor:pointer;
+}
+select:focus-visible{outline:2px solid var(--gilt);outline-offset:1px}
+#plate{
+  display:grid;gap:18px;
+  grid-template-columns:repeat(auto-fill,minmax(196px,1fr));
+}
+.specimen{
+  background:linear-gradient(180deg,var(--panel2),var(--panel));
+  border:1px solid var(--line);
+  outline:1px solid var(--line-faint);outline-offset:3px;
+  padding:12px 12px 12px;
+  display:flex;flex-direction:column;gap:9px;
+  transition:opacity .3s,border-color .25s,outline-color .25s;
+}
+.specimen.is-playing{
+  border-color:var(--gilt-dim);
+  outline-color:rgba(201,167,99,.35);
+}
+body.auditioning #plate .specimen:not(.is-playing){opacity:.32}
+.fig-head{
+  display:flex;align-items:baseline;justify-content:space-between;gap:8px;
+  min-height:18px;
+}
+.fig-no{
+  font-family:var(--sc);font-size:13px;letter-spacing:.12em;
+  color:var(--bone-dim);
+}
+.specimen.is-playing .fig-no{color:var(--gilt)}
+.elite-tag{
+  font-family:var(--sc);font-size:10px;letter-spacing:.16em;
+  color:var(--gilt);border:1px solid var(--gilt-dim);
+  padding:1px 7px;line-height:1.5;
+}
+button.figure{
+  position:relative;display:block;width:100%;
+  aspect-ratio:1/1;padding:0;cursor:pointer;
+  background:var(--well);
+  border:1px solid var(--line-faint);
+}
+button.figure:focus-visible{outline:2px solid var(--gilt);outline-offset:2px}
+.fig-inner{position:absolute;inset:0;will-change:transform}
+.fig-inner canvas{
+  position:absolute;inset:0;width:100%;height:100%;display:block;
+  transition:opacity .25s;
+}
+.glow{
+  position:absolute;inset:-6%;pointer-events:none;
+  opacity:var(--env,0);
+  mix-blend-mode:screen;
+}
+.genes{
+  display:grid;grid-template-columns:repeat(14,1fr);gap:2px;
+  height:20px;
+}
+.gene{
+  position:relative;overflow:hidden;
+  background:var(--well);border:1px solid rgba(230,220,195,.2);
+}
+.gene i{
+  position:absolute;left:0;right:0;bottom:0;
+  background:rgba(230,220,195,.5);
+}
+.fit-row{display:flex;align-items:center;gap:8px}
+.fit-row input[type=number]{width:5.5ch;font-size:17px}
+.p-toggle{
+  align-self:center;
+  font-family:var(--serif);font-style:italic;font-size:13px;
+  color:var(--bone-dim);background:none;border:none;cursor:pointer;
+  padding:1px 6px;
+}
+.p-toggle:hover{color:var(--gilt)}
+.p-toggle:focus-visible{outline:2px solid var(--gilt);outline-offset:2px}
+.p-body{border-top:1px solid var(--line-faint);padding-top:8px}
+.p-body pre{
+  margin:0 0 8px;
+  font-family:var(--mono);font-size:16px;line-height:1.35;
+  color:var(--bone);white-space:pre;
+}
+.p-body pre b{color:var(--gilt);font-weight:400}
+.copy-btn{font-size:11px;padding:4px 12px}
+.evolvebar{
+  position:fixed;left:0;right:0;bottom:0;z-index:50;
+  display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+  gap:12px;
+  padding:12px max(22px,env(safe-area-inset-left)) calc(12px + env(safe-area-inset-bottom)) max(22px,env(safe-area-inset-right));
+  background:rgba(11,19,15,.88);
+  backdrop-filter:blur(6px);
+  border-top:1px solid var(--line-faint);
+}
+.evolvebar .bar-gen{
+  justify-self:start;
+  font-family:var(--mono);font-size:20px;color:var(--bone-dim);
+}
+.evolvebar .bar-gen b{color:var(--gilt);font-weight:400}
+#evolveBtn{
+  justify-self:center;
+  font-size:19px;letter-spacing:.24em;
+  padding:11px 46px;
+  color:var(--gilt);border-color:var(--gilt-dim);
+  outline:1px solid rgba(201,167,99,.25);outline-offset:3px;
+}
+#evolveBtn:hover{background:var(--gilt);color:var(--plate)}
+.born{animation:born .45s ease-out backwards}
+@keyframes born{
+  from{opacity:0;transform:translateY(7px)}
+  to{opacity:1;transform:none}
+}
+@media (max-width:560px){
+  #plate{grid-template-columns:repeat(auto-fill,minmax(156px,1fr));gap:14px}
+  .evolvebar .bar-gen{font-size:17px}
+  #evolveBtn{padding:10px 30px;font-size:17px}
+}
+@media (prefers-reduced-motion:reduce){
+  .born{animation:none}
+  .specimen,.fig-inner canvas{transition:none}
+}
+</style>
+</head>
+<body>
+<div class="scanlines" aria-hidden="true"></div>
+<div class="vignette" aria-hidden="true"></div>
+<main>
+  <header class="top">
+    <h1>FM Synthesis with Genetic Algorithms</h1>
+    <div class="hud">
+      <span class="gen-hud"><em>Generation</em> <b id="genNum" aria-live="polite">0</b></span>
+      <button class="btn" id="resetBtn">RESET</button>
+    </div>
+  </header>
+  <p class="lede">Click a figure to hear it and set its fitness from 0 to 1. EVOLVE breeds the next generation from those ratings.</p>
+
+  <details class="about">
+    <summary>On the method</summary>
+    <div class="about-body">
+      <p>Every specimen carries a genome of fourteen genes, each a number between 0 and 1. The genes decode to the parameters of a small FM voice: a sine-wave modulator bends the frequency of a sine-wave carrier, feedback lets the modulator bend its own phase into a richer wave, vibrato wavers the carrier pitch, and a curved attack–release envelope shapes the amplitude. Parameters marked start → end glide between two values across the note. Frequencies map onto their genes exponentially, so blending two genomes blends their pitches in equal musical ratios. You are the fitness function. Specimens you rate highly are more likely to survive selection and pass their genes to the next generation, so the population adapts to your taste. Each drawing is computed from the genome, and identical genomes always produce identical figures.</p>
+      <table class="ptable">
+        <tr><td>carrier frequency</td><td>50–2000 Hz</td><td>pitch of the sound</td></tr>
+        <tr><td>modulator frequency</td><td>0.5–2000 Hz</td><td>spacing of the sidebands</td></tr>
+        <tr><td>mod index</td><td>0–10, start → end</td><td>brightness across the note</td></tr>
+        <tr><td>attack time</td><td>0.01–2 s</td><td>rise to full volume</td></tr>
+        <tr><td>release time</td><td>0.05–5 s</td><td>fade to silence</td></tr>
+        <tr><td>attack curve</td><td>−4–4</td><td>bend of the rise, 0 is linear</td></tr>
+        <tr><td>release curve</td><td>−4–4</td><td>bend of the fade, 0 is linear</td></tr>
+        <tr><td>vibrato rate</td><td>0.1–5 Hz, start → end</td><td>speed of the pitch waver</td></tr>
+        <tr><td>vibrato depth</td><td>0–25 ¢, start → end</td><td>width of the pitch waver</td></tr>
+        <tr><td>feedback</td><td>0–1.5, start → end</td><td>the modulator folding into itself</td></tr>
+      </table>
+    </div>
+  </details>
+
+  <section class="controls" aria-label="Algorithm settings">
+    <div class="card">
+      <h2>Mutation</h2>
+      <p class="cap">After crossover, each gene may change at random. Probability sets how often a gene mutates and sigma sets how far it moves.</p>
+      <div class="prow"><label for="mutP">probability</label>
+        <div class="pair"><input type="range" id="mutP" min="0" max="1" step="0.01" value="0.1"><input type="number" id="mutPN" min="0" max="1" step="0.01" value="0.1" aria-label="Mutation probability"></div>
+      </div>
+      <div class="prow"><label for="mutS">sigma</label>
+        <div class="pair"><input type="range" id="mutS" min="0" max="0.5" step="0.01" value="0.08"><input type="number" id="mutSN" min="0" max="0.5" step="0.01" value="0.08" aria-label="Mutation sigma"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Population</h2>
+      <p class="cap">Size is the number of specimens in each generation. Elites are the top-rated specimens, copied unchanged into the next generation.</p>
+      <div class="prow"><label for="popS">size</label>
+        <div class="pair"><input type="range" id="popS" min="4" max="32" step="1" value="12"><input type="number" id="popSN" min="4" max="32" step="1" value="12" aria-label="Population size"></div>
+      </div>
+      <div class="prow"><label for="elit">elitism</label>
+        <div class="pair"><input type="range" id="elit" min="0" max="10" step="1" value="2"><input type="number" id="elitN" min="0" max="10" step="1" value="2" aria-label="Elitism"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Selection</h2>
+      <p class="cap" id="selCap"></p>
+      <div class="prow">
+        <select id="selMode" aria-label="Selection method">
+          <option value="prob">Probabilistic</option>
+          <option value="tournament">Tournament</option>
+          <option value="roulette">Roulette</option>
+        </select>
+      </div>
+      <div id="selParams"></div>
+    </div>
+    <div class="card">
+      <h2>Crossover</h2>
+      <p class="cap" id="xCap"></p>
+      <div class="prow">
+        <select id="xType" aria-label="Crossover type">
+          <option value="uniform">Uniform</option>
+          <option value="single_point">Single point</option>
+          <option value="arithmetic">Arithmetic</option>
+        </select>
+      </div>
+      <div id="xParams"></div>
+    </div>
+  </section>
+
+  <div class="rule" aria-hidden="true"><span>❦</span></div>
+
+  <section id="plate" aria-label="Population"></section>
+</main>
+
+<div class="evolvebar">
+  <span class="bar-gen">GEN <b id="genEcho">0</b></span>
+  <button class="btn" id="evolveBtn">EVOLVE</button>
+  <span></span>
+</div>
+
+<script>
+const PARAM_DEFS = [
+  { key: "carrier_freq",    name: "carrier",             unit: " Hz", min: 50,   max: 2000, dp: 1, map: "exp" },
+  { key: "modulator_freq",  name: "modulator",           unit: " Hz", min: 0.5,  max: 2000, dp: 1, map: "exp" },
+  { key: "start_mod_index", name: "index start",         unit: "",    min: 0,    max: 10,   dp: 2, map: "lin" },
+  { key: "end_mod_index",   name: "index end",           unit: "",    min: 0,    max: 10,   dp: 2, map: "lin" },
+  { key: "attack_time",     name: "attack",              unit: " s",  min: 0.01, max: 2.0,  dp: 3, map: "lin" },
+  { key: "release_time",    name: "release",             unit: " s",  min: 0.05, max: 5.0,  dp: 3, map: "lin" },
+  { key: "attack_curve",    name: "attack curve",        unit: "",    min: -4,   max: 4,    dp: 2, map: "lin" },
+  { key: "release_curve",   name: "release curve",       unit: "",    min: -4,   max: 4,    dp: 2, map: "lin" },
+  { key: "start_vib_rate",  name: "vibrato rate start",  unit: " Hz", min: 0.1,  max: 5,    dp: 2, map: "exp" },
+  { key: "end_vib_rate",    name: "vibrato rate end",    unit: " Hz", min: 0.1,  max: 5,    dp: 2, map: "exp" },
+  { key: "start_vib_depth", name: "vibrato depth start", unit: " ¢",  min: 0,    max: 25,    dp: 2, map: "lin" },
+  { key: "end_vib_depth",   name: "vibrato depth end",   unit: " ¢",  min: 0,    max: 25,    dp: 2, map: "lin" },
+  { key: "start_feedback",  name: "feedback start",      unit: "",    min: 0,    max: 1.5,  dp: 2, map: "lin" },
+  { key: "end_feedback",    name: "feedback end",        unit: "",    min: 0,    max: 1.5,  dp: 2, map: "lin" }
+];
+const GENES = PARAM_DEFS.length;
+const AMP = 0.2;
+const LOUDNESS_STRENGTH = 0.6;
+
+function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
+function lerp(a, b, x) { return a + (b - a) * x; }
+
+function mapParams(g) {
+  const p = {};
+  for (let i = 0; i < GENES; i++) {
+    const d = PARAM_DEFS[i];
+    const x = clamp(g[i], 0, 1);
+    p[d.key] = d.map === "exp" ? d.min * Math.pow(d.max / d.min, x) : lerp(d.min, d.max, x);
+  }
+  return p;
+}
+
+function gauss() {
+  let u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+
+function skewLow(u, p) { return Math.pow(clamp(u, 0, 1), p); }
+function skewHigh(u, p) { return 1 - Math.pow(1 - clamp(u, 0, 1), p); }
+
+const INIT_SKEW = PARAM_DEFS.map((d, i) => i === 4 ? ["low", 3] : i === 5 ? ["high", 3] : ["uniform", 1]);
+
+function sampleGene(i) {
+  const [mode, p] = INIT_SKEW[i];
+  const u = Math.random();
+  if (mode === "low") return skewLow(u, p);
+  if (mode === "high") return skewHigh(u, p);
+  return u;
+}
+
+function randomGenome() {
+  const g = new Array(GENES);
+  for (let i = 0; i < GENES; i++) g[i] = sampleGene(i);
+  return g;
+}
+
+function crossoverUniform(a, b, pSwap) {
+  const c = new Array(a.length);
+  for (let i = 0; i < a.length; i++) c[i] = Math.random() < pSwap ? a[i] : b[i];
+  return c;
+}
+
+function crossoverSinglePoint(a, b, point) {
+  if (a.length < 2) return a.slice();
+  const c = new Array(a.length);
+  for (let i = 0; i < a.length; i++) c[i] = i < point ? a[i] : b[i];
+  return c;
+}
+
+function crossoverArithmetic(a, b, alpha) {
+  const c = new Array(a.length);
+  for (let i = 0; i < a.length; i++) c[i] = clamp(alpha * a[i] + (1 - alpha) * b[i], 0, 1);
+  return c;
+}
+
+function mutate(g, p, sigma) {
+  const m = g.slice();
+  for (let i = 0; i < m.length; i++) {
+    if (Math.random() < p) {
+      if (Math.random() < 0.5) m[i] += gauss() * sigma;
+      else m[i] = Math.random();
+    }
+    m[i] = clamp(m[i], 0, 1);
+  }
+  return m;
+}
+
+function rankIndices(fit) {
+  return [...fit.keys()].sort((a, b) => fit[b] - fit[a]);
+}
+
+function sampleWithoutReplacement(arr, k) {
+  const a = arr.slice();
+  for (let i = 0; i < k; i++) {
+    const j = i + Math.floor(Math.random() * (a.length - i));
+    const t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a.slice(0, k);
+}
+
+function weightedSampleWithoutReplacement(weights, k) {
+  const idx = [...weights.keys()];
+  const w = weights.slice();
+  const chosen = [];
+  for (let n = 0; n < k && idx.length > 0; n++) {
+    let total = 0;
+    for (const x of w) total += x;
+    let r = Math.random() * total;
+    let pick = w.length - 1;
+    for (let i = 0; i < w.length; i++) {
+      r -= w[i];
+      if (r <= 0) { pick = i; break; }
+    }
+    chosen.push(idx[pick]);
+    idx.splice(pick, 1);
+    w.splice(pick, 1);
+  }
+  return chosen;
+}
+
+const engine = {
+  popSize: 12,
+  mutationProb: 0.1,
+  mutationSigma: 0.08,
+  elitism: 2,
+  crossoverType: "uniform",
+  crossoverParams: { p_swap: 0.5, point: 7, alpha: 0.5 },
+  selectionMode: "prob",
+  selectionParams: { rounds: 1, k: 3, keep_frac: 0.5, power: 1.0 },
+  generation: 0,
+  population: [],
+  fitness: []
+};
+
+let lastEliteCount = 0;
+
+function initPopulation() {
+  engine.population = [];
+  for (let i = 0; i < engine.popSize; i++) engine.population.push(randomGenome());
+  engine.fitness = new Array(engine.popSize).fill(0);
+  engine.generation = 0;
+  lastEliteCount = 0;
+}
+
+function doCrossover(a, b) {
+  if (engine.crossoverType === "uniform") {
+    return crossoverUniform(a, b, engine.crossoverParams.p_swap);
+  }
+  if (engine.crossoverType === "single_point") {
+    const point = Math.round(clamp(engine.crossoverParams.point, 1, a.length - 1));
+    return crossoverSinglePoint(a, b, point);
+  }
+  if (engine.crossoverType === "arithmetic") {
+    return crossoverArithmetic(a, b, clamp(engine.crossoverParams.alpha, 0, 1));
+  }
+  return crossoverUniform(a, b, 0.5);
+}
+
+function selectSurvivors() {
+  const n = engine.population.length;
+  const fit = engine.fitness;
+  if (engine.selectionMode === "prob") {
+    const rounds = Math.max(1, Math.round(engine.selectionParams.rounds));
+    const winners = [];
+    for (let i = 0; i < n; i++) {
+      const p = clamp(fit[i], 0, 1);
+      let ok = false;
+      for (let r = 0; r < rounds; r++) {
+        if (Math.random() < p) { ok = true; break; }
+      }
+      if (ok) winners.push(i);
+    }
+    if (winners.length < Math.max(2, engine.elitism)) {
+      return rankIndices(fit).slice(0, Math.max(2, engine.elitism)).map(i => engine.population[i]);
+    }
+    return winners.map(i => engine.population[i]);
+  }
+  if (engine.selectionMode === "tournament") {
+    const k = Math.round(clamp(engine.selectionParams.k, 2, n));
+    const keep = clamp(engine.selectionParams.keep_frac, 0.05, 1);
+    const target = Math.max(engine.elitism, Math.ceil(keep * n));
+    const winners = new Set();
+    const idx = [...Array(n).keys()];
+    let guard = 200 * n;
+    while (winners.size < target && guard-- > 0) {
+      const cand = sampleWithoutReplacement(idx, Math.min(k, n));
+      let best = cand[0];
+      for (const j of cand) if (fit[j] > fit[best]) best = j;
+      winners.add(best);
+      if (winners.size === n) break;
+    }
+    return [...winners].map(i => engine.population[i]);
+  }
+  if (engine.selectionMode === "roulette") {
+    const keep = clamp(engine.selectionParams.keep_frac, 0.05, 1);
+    const power = Math.max(0.1, engine.selectionParams.power);
+    let target = Math.max(engine.elitism, Math.ceil(keep * n));
+    target = Math.min(target, n);
+    let w = fit.map(f => Math.pow(Math.max(0, f), power));
+    if (w.every(x => x === 0)) w = w.map(() => 1);
+    return weightedSampleWithoutReplacement(w, target).map(i => engine.population[i]);
+  }
+  return rankIndices(fit).slice(0, Math.max(2, engine.elitism)).map(i => engine.population[i]);
+}
+
+function chooseParents(survivors) {
+  if (survivors.length >= 2) return sampleWithoutReplacement(survivors, 2);
+  if (survivors.length === 1) return [survivors[0], randomGenome()];
+  return [randomGenome(), randomGenome()];
+}
+
+function breed() {
+  const survivors = selectSurvivors();
+  const order = rankIndices(engine.fitness);
+  const elites = order.slice(0, engine.elitism).map(i => engine.population[i].slice());
+  const newPop = elites.slice();
+  while (newPop.length < engine.popSize) {
+    const [a, b] = chooseParents(survivors);
+    let child = doCrossover(a, b);
+    child = mutate(child, engine.mutationProb, engine.mutationSigma);
+    newPop.push(child);
+  }
+  engine.population = newPop.slice(0, engine.popSize);
+  engine.fitness = new Array(engine.popSize).fill(0);
+  engine.generation += 1;
+  lastEliteCount = Math.min(elites.length, engine.popSize);
+}
+
+function toRoman(n) {
+  const table = [[1000, "M"], [900, "CM"], [500, "D"], [400, "CD"], [100, "C"], [90, "XC"], [50, "L"], [40, "XL"], [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]];
+  let out = "";
+  for (const [v, s] of table) { while (n >= v) { out += s; n -= v; } }
+  return out;
+}
+
+function aWeightDb(f) {
+  const f2 = f * f;
+  const r = 148693636 * f2 * f2 /
+    ((f2 + 424.36) * Math.sqrt((f2 + 11599.29) * (f2 + 544496.41)) * (f2 + 148693636));
+  return 20 * Math.log10(r) + 2.0;
+}
+
+function loudnessGain(freq) {
+  const db = (aWeightDb(1000) - aWeightDb(Math.max(20, freq))) * LOUDNESS_STRENGTH;
+  return Math.pow(10, clamp(db, -8, 8) / 20);
+}
+
+function hashGenome(g) {
+  const s = g.map(x => x.toFixed(6)).join(",");
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+function inkColor(gc) {
+  const lo = [168, 196, 182];
+  const hi = [230, 208, 156];
+  const c = lo.map((v, i) => Math.round(lerp(v, hi[i], gc)));
+  return c;
+}
+
+function rgba(c, a) { return "rgba(" + c[0] + "," + c[1] + "," + c[2] + "," + a + ")"; }
+
+function drawSpecimen(canvas, genome) {
+  const dpr = window.devicePixelRatio || 1;
+  const cw = canvas.clientWidth || 200;
+  const S = Math.max(120, cw);
+  canvas.width = Math.round(S * dpr);
+  canvas.height = Math.round(S * dpr);
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, S, S);
+
+  const [gc, gm, gi0, gi1, ga, gr, gca, gcr, gvr0, gvr1, gvd0, gvd1, gfb0, gfb1] = genome;
+  const rng = mulberry32(hashGenome(genome));
+  const ink = inkColor(gc);
+  const cx = S / 2, cy = S / 2;
+  const ox = (gca - 0.5) * S * 0.028;
+  const oy = (gcr - 0.5) * S * 0.028;
+  const Rout = S * 0.47;
+  const Rg = S * 0.34;
+  const arms = 5 + Math.floor(gm * 11.999);
+  const avgIdx = (gi0 + gi1) / 2;
+  const brighten = gi1 - gi0;
+  const fbm = (gfb0 + gfb1) / 2;
+  const wobAmp = S * 0.024 * ((gvd0 + gvd1) / 2);
+  const wobWaves = 1 + Math.round(3 * ((gvr0 + gvr1) / 2));
+  const coreR = Rout * (0.14 + 0.16 * (1 - gc));
+  const armLen = lerp(coreR + Rout * 0.22, Rout * 0.98, avgIdx * 0.82 + 0.18 * rng());
+  const rings = 1 + Math.round(ga * 3);
+  const cil = lerp(S * 0.015, S * 0.11, gr);
+  const serr = 2 + Math.round(5 * avgIdx);
+
+  ctx.lineCap = "round";
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, Rg, 0, Math.PI * 2);
+  ctx.strokeStyle = rgba(ink, 0.2);
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  const nCil = arms * 4;
+  ctx.strokeStyle = rgba(ink, 0.42);
+  ctx.lineWidth = Math.max(0.7, S * 0.0035);
+  for (let j = 0; j < nCil; j++) {
+    const th = (j / nCil) * Math.PI * 2 + (rng() - 0.5) * 0.06;
+    const l = cil * (0.6 + 0.4 * rng());
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(th) * Rg, cy + Math.sin(th) * Rg);
+    ctx.lineTo(cx + Math.cos(th) * (Rg + l), cy + Math.sin(th) * (Rg + l));
+    ctx.stroke();
+  }
+
+  const spineW = Math.max(1, S * 0.006);
+  const tickW = Math.max(0.7, S * 0.0038);
+  for (let a = 0; a < arms; a++) {
+    const th0 = (a / arms) * Math.PI * 2 - Math.PI / 2 + (rng() - 0.5) * (0.22 / arms) * Math.PI;
+    const bend = (rng() - 0.5) * 0.34;
+    const wobPh = rng() * Math.PI * 2;
+    const len = armLen * (0.92 + 0.08 * rng());
+    const pts = [];
+    const steps = 10;
+    for (let s = 0; s <= steps; s++) {
+      const u = s / steps;
+      const r = lerp(coreR * 0.9, len, u);
+      const ang = th0 + bend * u * u;
+      const wob = wobAmp * u * Math.sin(u * wobWaves * Math.PI * 2 + wobPh);
+      const px = cx + Math.cos(ang) * r + Math.cos(ang + Math.PI / 2) * wob;
+      const py = cy + Math.sin(ang) * r + Math.sin(ang + Math.PI / 2) * wob;
+      pts.push([px, py, ang]);
+    }
+    ctx.beginPath();
+    ctx.moveTo(pts[0][0], pts[0][1]);
+    for (let s = 1; s <= steps; s++) ctx.lineTo(pts[s][0], pts[s][1]);
+    ctx.strokeStyle = rgba(ink, 0.9);
+    ctx.lineWidth = spineW;
+    ctx.stroke();
+
+    ctx.strokeStyle = rgba(ink, 0.55);
+    ctx.lineWidth = tickW;
+    const tl = S * (0.012 + 0.014 * avgIdx);
+    for (let t = 0; t < serr; t++) {
+      const u = 0.3 + 0.55 * (t / Math.max(1, serr - 1));
+      const s = u * steps;
+      const s0 = Math.floor(s), fr = s - s0;
+      const p0 = pts[Math.min(s0, steps)], p1 = pts[Math.min(s0 + 1, steps)];
+      const px = lerp(p0[0], p1[0], fr), py = lerp(p0[1], p1[1], fr);
+      const ang = lerp(p0[2], p1[2], fr);
+      const side = t % 2 === 0 ? 1 : -1;
+      const nx = Math.cos(ang + side * Math.PI / 2), ny = Math.sin(ang + side * Math.PI / 2);
+      const back = Math.PI * 0.22 * side;
+      const dx = nx * Math.cos(back) - ny * Math.sin(back);
+      const dy = nx * Math.sin(back) + ny * Math.cos(back);
+      ctx.beginPath();
+      ctx.moveTo(px, py);
+      ctx.lineTo(px + dx * tl, py + dy * tl);
+      ctx.stroke();
+    }
+
+    const tip = pts[steps];
+    const tipAng = tip[2];
+    if (brighten > 0.08) {
+      const fl = S * (0.02 + 0.05 * brighten);
+      ctx.strokeStyle = rgba(ink, 0.85);
+      ctx.lineWidth = tickW;
+      for (const d of [-0.5, 0.5]) {
+        ctx.beginPath();
+        ctx.moveTo(tip[0], tip[1]);
+        ctx.lineTo(tip[0] + Math.cos(tipAng + d) * fl, tip[1] + Math.sin(tipAng + d) * fl);
+        ctx.stroke();
+      }
+    } else if (brighten < -0.08) {
+      const kr = Math.max(1.4, S * (0.006 + 0.02 * -brighten));
+      ctx.beginPath();
+      ctx.arc(tip[0] + Math.cos(tipAng) * kr, tip[1] + Math.sin(tipAng) * kr, kr, 0, Math.PI * 2);
+      ctx.strokeStyle = rgba(ink, 0.85);
+      ctx.lineWidth = tickW;
+      ctx.stroke();
+    } else {
+      ctx.beginPath();
+      ctx.arc(tip[0], tip[1], Math.max(0.9, S * 0.004), 0, Math.PI * 2);
+      ctx.fillStyle = rgba(ink, 0.85);
+      ctx.fill();
+    }
+  }
+
+  if (fbm > 0.04) {
+    const hairs = Math.round(arms * (1.5 + 6 * fbm));
+    ctx.strokeStyle = rgba(ink, 0.32);
+    ctx.lineWidth = Math.max(0.6, S * 0.0026);
+    for (let h = 0; h < hairs; h++) {
+      const th = rng() * Math.PI * 2;
+      const r0 = coreR * (1.1 + 0.5 * rng());
+      const l = S * (0.02 + 0.1 * fbm) * (0.45 + 0.55 * rng());
+      const th1 = th + (rng() - 0.5) * 0.3;
+      const th2 = th1 + (rng() - 0.5) * 0.3;
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(th) * r0, cy + Math.sin(th) * r0);
+      ctx.lineTo(cx + Math.cos(th1) * (r0 + l * 0.55), cy + Math.sin(th1) * (r0 + l * 0.55));
+      ctx.lineTo(cx + Math.cos(th2) * (r0 + l), cy + Math.sin(th2) * (r0 + l));
+      ctx.stroke();
+    }
+  }
+
+  const ringGap = coreR * (0.32 + 0.85 * ga);
+  for (let k = 1; k <= rings; k++) {
+    ctx.beginPath();
+    ctx.arc(cx + ox, cy + oy, coreR + k * ringGap * 0.55, 0, Math.PI * 2);
+    ctx.strokeStyle = rgba(ink, 0.42 - k * 0.08);
+    ctx.lineWidth = Math.max(0.7, S * 0.0032);
+    ctx.stroke();
+  }
+
+  ctx.beginPath();
+  ctx.arc(cx + ox, cy + oy, coreR, 0, Math.PI * 2);
+  ctx.fillStyle = "#0b130f";
+  ctx.fill();
+  ctx.strokeStyle = rgba(ink, 0.9);
+  ctx.lineWidth = Math.max(1, S * 0.005);
+  ctx.stroke();
+
+  ctx.strokeStyle = rgba(ink, 0.5);
+  ctx.lineWidth = Math.max(0.7, S * 0.0032);
+  for (let a = 0; a < arms; a++) {
+    const th = (a / arms) * Math.PI * 2 - Math.PI / 2;
+    ctx.beginPath();
+    ctx.moveTo(cx + ox + Math.cos(th) * coreR * 0.28, cy + oy + Math.sin(th) * coreR * 0.28);
+    ctx.lineTo(cx + ox + Math.cos(th) * coreR * 0.8, cy + oy + Math.sin(th) * coreR * 0.8);
+    ctx.stroke();
+  }
+  ctx.beginPath();
+  ctx.arc(cx + ox, cy + oy, Math.max(1.4, S * 0.011), 0, Math.PI * 2);
+  ctx.fillStyle = rgba(ink, 0.95);
+  ctx.fill();
+
+  const specks = 3 + Math.floor(rng() * 5);
+  ctx.fillStyle = rgba(ink, 0.4);
+  for (let d = 0; d < specks; d++) {
+    const th = rng() * Math.PI * 2;
+    const r = lerp(Rg * 0.75, Rout * 0.92, rng());
+    ctx.beginPath();
+    ctx.arc(cx + Math.cos(th) * r, cy + Math.sin(th) * r, Math.max(0.8, S * 0.0035), 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+let ac = null, master = null;
+let current = null;
+let buffers = [];
+let envAnim = null;
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+function ensureAudio() {
+  if (!ac) {
+    ac = new (window.AudioContext || window.webkitAudioContext)();
+    const comp = ac.createDynamicsCompressor();
+    comp.threshold.value = -10;
+    comp.knee.value = 12;
+    comp.ratio.value = 4;
+    comp.attack.value = 0.003;
+    comp.release.value = 0.25;
+    master = ac.createGain();
+    master.gain.value = 0.9;
+    master.connect(comp);
+    comp.connect(ac.destination);
+  }
+  if (ac.state === "suspended") ac.resume();
+}
+
+function envShape(pos, c) {
+  if (Math.abs(c) < 1e-4) return pos;
+  return (1 - Math.exp(c * pos)) / (1 - Math.exp(c));
+}
+
+function renderBuffer(genome) {
+  const p = mapParams(genome);
+  const sr = ac.sampleRate;
+  const aN = Math.max(1, Math.round(p.attack_time * sr));
+  const rN = Math.max(1, Math.round(p.release_time * sr));
+  const n = aN + rN;
+  const buf = ac.createBuffer(1, n, sr);
+  const d = buf.getChannelData(0);
+  const wc = 2 * Math.PI * p.carrier_freq / sr;
+  const wm = 2 * Math.PI * p.modulator_freq / sr;
+  const twoPiSr = 2 * Math.PI / sr;
+  const den = n > 1 ? n - 1 : 1;
+  const dIdx = (p.end_mod_index - p.start_mod_index) / den;
+  const dVr = (p.end_vib_rate - p.start_vib_rate) / den;
+  const dVd = (p.end_vib_depth - p.start_vib_depth) / den;
+  const dFb = (p.end_feedback - p.start_feedback) / den;
+  let carPhase = 0, modPhase = 0, vibPhase = 0, modPrev = 0;
+  for (let i = 0; i < n; i++) {
+    const env = i < aN
+      ? envShape(i / aN, p.attack_curve)
+      : (rN === 1 ? 1 : 1 - envShape((i - aN) / (rN - 1), p.release_curve));
+    const idx = p.start_mod_index + dIdx * i;
+    const modOut = Math.sin(modPhase + (p.start_feedback + dFb * i) * modPrev);
+    modPrev = modOut;
+    d[i] = clamp(AMP * env * Math.sin(carPhase + idx * modOut), -1, 1);
+    modPhase += wm;
+    vibPhase += twoPiSr * (p.start_vib_rate + dVr * i);
+    carPhase += wc * Math.pow(2, (p.start_vib_depth + dVd * i) * Math.sin(vibPhase) / 1200);
+  }
+  return buf;
+}
+
+function stopAudio() {
+  if (!current) return;
+  const { src, g } = current;
+  current = null;
+  try {
+    g.gain.cancelScheduledValues(ac.currentTime);
+    g.gain.setTargetAtTime(0, ac.currentTime, 0.012);
+    src.stop(ac.currentTime + 0.08);
+  } catch (e) {}
+}
+
+function clearPlayingUI() {
+  if (envAnim) { cancelAnimationFrame(envAnim); envAnim = null; }
+  document.body.classList.remove("auditioning");
+  for (const c of cards) {
+    c.el.classList.remove("is-playing");
+    c.el.style.removeProperty("--env");
+    c.inner.style.transform = "";
+  }
+}
+
+function markPlayingUI(i, atk, rel) {
+  document.body.classList.add("auditioning");
+  const c = cards[i];
+  c.el.classList.add("is-playing");
+  const t0 = performance.now();
+  const total = atk + rel;
+  const step = () => {
+    const e = (performance.now() - t0) / 1000;
+    const env = e < atk ? e / atk : Math.max(0, 1 - (e - atk) / rel);
+    c.el.style.setProperty("--env", env.toFixed(3));
+    if (!reducedMotion.matches) {
+      c.inner.style.transform = "scale(" + (1 + 0.05 * env).toFixed(4) + ")";
+    }
+    if (e < total + 0.1 && current && current.i === i) {
+      envAnim = requestAnimationFrame(step);
+    }
+  };
+  envAnim = requestAnimationFrame(step);
+}
+
+function playIndex(i) {
+  ensureAudio();
+  if (current && current.i === i) {
+    stopAudio();
+    clearPlayingUI();
+    return;
+  }
+  stopAudio();
+  clearPlayingUI();
+  if (!buffers[i]) buffers[i] = renderBuffer(engine.population[i]);
+  const p = mapParams(engine.population[i]);
+  const src = ac.createBufferSource();
+  src.buffer = buffers[i];
+  const g = ac.createGain();
+  g.gain.value = loudnessGain(p.carrier_freq);
+  src.connect(g);
+  g.connect(master);
+  src.onended = () => {
+    if (current && current.src === src) {
+      current = null;
+      clearPlayingUI();
+    }
+  };
+  current = { i, src, g };
+  src.start();
+  markPlayingUI(i, p.attack_time, p.release_time);
+}
+
+function fmt(v, dp) { return v.toFixed(dp); }
+
+function paramText(genome) {
+  const p = mapParams(genome);
+  const pair = (a, b, dp) => "<b>" + fmt(a, dp) + "</b> → <b>" + fmt(b, dp) + "</b>";
+  return "carrier    <b>" + fmt(p.carrier_freq, 1) + "</b> Hz\n" +
+         "modulator  <b>" + fmt(p.modulator_freq, 1) + "</b> Hz\n" +
+         "index      " + pair(p.start_mod_index, p.end_mod_index, 2) + "\n" +
+         "attack     <b>" + fmt(p.attack_time, 3) + "</b> s · crv <b>" + fmt(p.attack_curve, 2) + "</b>\n" +
+         "release    <b>" + fmt(p.release_time, 3) + "</b> s · crv <b>" + fmt(p.release_curve, 2) + "</b>\n" +
+         "vib rate   " + pair(p.start_vib_rate, p.end_vib_rate, 2) + " Hz\n" +
+         "vib depth  " + pair(p.start_vib_depth, p.end_vib_depth, 2) + " ¢\n" +
+         "feedback   " + pair(p.start_feedback, p.end_feedback, 2);
+}
+
+function paramPython(genome) {
+  const p = mapParams(genome);
+  const keys = PARAM_DEFS.map(d => d.key);
+  return "{" + keys.map(k => '"' + k + '": ' + Number(p[k].toFixed(6))).join(", ") + "}";
+}
+
+function copyText(text, btn) {
+  const done = () => {
+    const old = btn.textContent;
+    btn.textContent = "COPIED";
+    setTimeout(() => { btn.textContent = old; }, 1200);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done));
+  } else {
+    fallbackCopy(text, done);
+  }
+}
+
+function fallbackCopy(text, done) {
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand("copy"); } catch (e) {}
+  document.body.removeChild(ta);
+  done();
+}
+
+const els = {
+  plate: document.getElementById("plate"),
+  genNum: document.getElementById("genNum"),
+  genEcho: document.getElementById("genEcho"),
+  evolveBtn: document.getElementById("evolveBtn"),
+  resetBtn: document.getElementById("resetBtn"),
+  selMode: document.getElementById("selMode"),
+  selParams: document.getElementById("selParams"),
+  selCap: document.getElementById("selCap"),
+  xType: document.getElementById("xType"),
+  xParams: document.getElementById("xParams"),
+  xCap: document.getElementById("xCap")
+};
+
+let cards = [];
+
+function bindPair(rangeEl, numEl, opts, onChange) {
+  const snap = v => {
+    let x = parseFloat(v);
+    if (isNaN(x)) x = opts.fallback;
+    x = clamp(x, opts.min, opts.max);
+    if (opts.int) x = Math.round(x);
+    return x;
+  };
+  rangeEl.addEventListener("input", () => {
+    const v = snap(rangeEl.value);
+    numEl.value = v;
+    onChange(v);
+  });
+  numEl.addEventListener("change", () => {
+    const v = snap(numEl.value);
+    numEl.value = v;
+    rangeEl.value = v;
+    onChange(v);
+  });
+  return () => snap(numEl.value);
+}
+
+function paramRow(labelText, opts) {
+  const row = document.createElement("div");
+  row.className = "prow";
+  const label = document.createElement("label");
+  label.textContent = labelText;
+  const pair = document.createElement("div");
+  pair.className = "pair";
+  const range = document.createElement("input");
+  range.type = "range";
+  range.min = opts.min; range.max = opts.max; range.step = opts.step; range.value = opts.value;
+  const num = document.createElement("input");
+  num.type = "number";
+  num.min = opts.min; num.max = opts.max; num.step = opts.step; num.value = opts.value;
+  num.setAttribute("aria-label", labelText);
+  pair.append(range, num);
+  row.append(label, pair);
+  const read = bindPair(range, num, { min: opts.min, max: opts.max, int: opts.int, fallback: opts.value }, opts.onChange || (() => {}));
+  return { row, read };
+}
+
+const SEL_CAPTIONS = {
+  prob: "Every specimen flips a coin weighted by its own fitness. Extra rounds give each specimen more chances to survive.",
+  tournament: "Random groups of k specimens compete and the fittest of each group survives. Keep sets how much of the population lives on.",
+  roulette: "Survivors are drawn with probability proportional to fitness. Power sharpens the advantage of the strong."
+};
+const X_CAPTIONS = {
+  uniform: "Each gene of a child comes from one parent or the other. Swap sets the odds per gene.",
+  single_point: "Genes before the point come from one parent and the rest come from the other.",
+  arithmetic: "Each child gene is a weighted blend of both parents. Alpha sets the balance between them."
+};
+
+let selReaders = {};
+let xReaders = {};
+
+function buildSelectionParams() {
+  els.selParams.innerHTML = "";
+  els.selCap.textContent = SEL_CAPTIONS[els.selMode.value];
+  selReaders = {};
+  const sp = engine.selectionParams;
+  if (els.selMode.value === "prob") {
+    const r = paramRow("rounds", { min: 1, max: 10, step: 1, value: Math.round(sp.rounds), int: true });
+    els.selParams.append(r.row);
+    selReaders.rounds = r.read;
+  } else if (els.selMode.value === "tournament") {
+    const rk = paramRow("k", { min: 2, max: 32, step: 1, value: Math.round(sp.k), int: true });
+    const rf = paramRow("keep", { min: 0.05, max: 1, step: 0.05, value: sp.keep_frac });
+    els.selParams.append(rk.row, rf.row);
+    selReaders.k = rk.read;
+    selReaders.keep_frac = rf.read;
+  } else {
+    const rf = paramRow("keep", { min: 0.05, max: 1, step: 0.05, value: sp.keep_frac });
+    const rp = paramRow("power", { min: 0.1, max: 3, step: 0.1, value: sp.power });
+    els.selParams.append(rf.row, rp.row);
+    selReaders.keep_frac = rf.read;
+    selReaders.power = rp.read;
+  }
+}
+
+function buildCrossoverParams() {
+  els.xParams.innerHTML = "";
+  els.xCap.textContent = X_CAPTIONS[els.xType.value];
+  xReaders = {};
+  const cp = engine.crossoverParams;
+  if (els.xType.value === "uniform") {
+    const r = paramRow("swap", { min: 0, max: 1, step: 0.01, value: cp.p_swap });
+    els.xParams.append(r.row);
+    xReaders.p_swap = r.read;
+  } else if (els.xType.value === "single_point") {
+    const r = paramRow("point", { min: 1, max: GENES - 1, step: 1, value: Math.round(cp.point), int: true });
+    els.xParams.append(r.row);
+    xReaders.point = r.read;
+  } else {
+    const r = paramRow("alpha", { min: 0, max: 1, step: 0.01, value: cp.alpha });
+    els.xParams.append(r.row);
+    xReaders.alpha = r.read;
+  }
+}
+
+const mutP = document.getElementById("mutP"), mutPN = document.getElementById("mutPN");
+const mutS = document.getElementById("mutS"), mutSN = document.getElementById("mutSN");
+const popS = document.getElementById("popS"), popSN = document.getElementById("popSN");
+const elit = document.getElementById("elit"), elitN = document.getElementById("elitN");
+const readMutP = bindPair(mutP, mutPN, { min: 0, max: 1, fallback: 0.1 }, () => {});
+const readMutS = bindPair(mutS, mutSN, { min: 0, max: 0.5, fallback: 0.08 }, () => {});
+const readPopS = bindPair(popS, popSN, { min: 4, max: 32, int: true, fallback: 12 }, () => {});
+const readElit = bindPair(elit, elitN, { min: 0, max: 10, int: true, fallback: 2 }, () => {});
+
+els.selMode.addEventListener("change", buildSelectionParams);
+els.xType.addEventListener("change", buildCrossoverParams);
+
+function setVitality(i, v) {
+  cards[i].canvas.style.opacity = (0.55 + 0.45 * clamp(v, 0, 1)).toFixed(3);
+}
+
+function buildCard(i) {
+  const genome = engine.population[i];
+  const roman = toRoman(i + 1);
+  const card = document.createElement("article");
+  card.className = "specimen born";
+  card.style.animationDelay = (i * 22) + "ms";
+
+  const head = document.createElement("div");
+  head.className = "fig-head";
+  const figNo = document.createElement("span");
+  figNo.className = "fig-no";
+  figNo.textContent = "Fig. " + roman;
+  head.append(figNo);
+  if (engine.generation > 0 && i < lastEliteCount) {
+    const tag = document.createElement("span");
+    tag.className = "elite-tag";
+    tag.textContent = "ELITE";
+    tag.title = "Copied unchanged from the previous generation";
+    head.append(tag);
+  }
+
+  const figBtn = document.createElement("button");
+  figBtn.className = "figure";
+  figBtn.setAttribute("aria-label", "Play specimen " + roman);
+  const inner = document.createElement("div");
+  inner.className = "fig-inner";
+  const canvas = document.createElement("canvas");
+  const glow = document.createElement("span");
+  glow.className = "glow";
+  const ink = inkColor(genome[0]);
+  glow.style.background = "radial-gradient(circle, " + rgba(ink, 0.4) + " 0%, transparent 62%)";
+  inner.append(canvas, glow);
+  figBtn.append(inner);
+  figBtn.addEventListener("click", () => playIndex(i));
+
+  const genes = document.createElement("div");
+  genes.className = "genes";
+  const p = mapParams(genome);
+  for (let gI = 0; gI < GENES; gI++) {
+    const d = PARAM_DEFS[gI];
+    const cell = document.createElement("span");
+    cell.className = "gene";
+    cell.title = d.name + ": " + fmt(p[d.key], d.dp) + d.unit;
+    const fill = document.createElement("i");
+    fill.style.height = (clamp(genome[gI], 0, 1) * 100).toFixed(1) + "%";
+    cell.append(fill);
+    genes.append(cell);
+  }
+
+  const fitRow = document.createElement("div");
+  fitRow.className = "fit-row";
+  const fitRange = document.createElement("input");
+  fitRange.type = "range";
+  fitRange.className = "fit";
+  fitRange.min = 0; fitRange.max = 1; fitRange.step = 0.01;
+  fitRange.value = engine.fitness[i];
+  fitRange.setAttribute("aria-label", "Fitness of specimen " + roman);
+  const fitNum = document.createElement("input");
+  fitNum.type = "number";
+  fitNum.min = 0; fitNum.max = 1; fitNum.step = 0.01;
+  fitNum.value = engine.fitness[i];
+  fitNum.setAttribute("aria-label", "Fitness of specimen " + roman);
+  fitRow.append(fitRange, fitNum);
+  bindPair(fitRange, fitNum, { min: 0, max: 1, fallback: 0 }, v => {
+    engine.fitness[i] = v;
+    setVitality(i, v);
+  });
+
+  const pToggle = document.createElement("button");
+  pToggle.className = "p-toggle";
+  pToggle.textContent = "parameters ▾";
+  pToggle.setAttribute("aria-expanded", "false");
+  const pBody = document.createElement("div");
+  pBody.className = "p-body";
+  pBody.hidden = true;
+  const pre = document.createElement("pre");
+  pre.innerHTML = paramText(genome);
+  const copyBtn = document.createElement("button");
+  copyBtn.className = "btn copy-btn";
+  copyBtn.textContent = "COPY PYTHON";
+  copyBtn.addEventListener("click", () => copyText(paramPython(genome), copyBtn));
+  pBody.append(pre, copyBtn);
+  pToggle.addEventListener("click", () => {
+    pBody.hidden = !pBody.hidden;
+    pToggle.textContent = pBody.hidden ? "parameters ▾" : "parameters ▴";
+    pToggle.setAttribute("aria-expanded", String(!pBody.hidden));
+  });
+
+  card.append(head, figBtn, genes, fitRow, pToggle, pBody);
+  return { el: card, canvas, inner };
+}
+
+function renderGrid() {
+  stopAudio();
+  clearPlayingUI();
+  els.plate.innerHTML = "";
+  cards = [];
+  for (let i = 0; i < engine.population.length; i++) {
+    const c = buildCard(i);
+    cards.push(c);
+    els.plate.append(c.el);
+  }
+  requestAnimationFrame(() => {
+    for (let i = 0; i < cards.length; i++) {
+      drawSpecimen(cards[i].canvas, engine.population[i]);
+      setVitality(i, engine.fitness[i]);
+    }
+  });
+}
+
+function updateGenLabels() {
+  els.genNum.textContent = engine.generation;
+  els.genEcho.textContent = engine.generation;
+}
+
+function readSettings() {
+  engine.mutationProb = readMutP();
+  engine.mutationSigma = readMutS();
+  engine.elitism = readElit();
+  engine.popSize = readPopS();
+  engine.selectionMode = els.selMode.value;
+  for (const key in selReaders) engine.selectionParams[key] = selReaders[key]();
+  engine.crossoverType = els.xType.value;
+  for (const key in xReaders) engine.crossoverParams[key] = xReaders[key]();
+}
+
+els.evolveBtn.addEventListener("click", () => {
+  readSettings();
+  breed();
+  buffers = [];
+  updateGenLabels();
+  renderGrid();
+});
+
+let resetArmed = false, resetTimer = null;
+els.resetBtn.addEventListener("click", () => {
+  if (!resetArmed) {
+    resetArmed = true;
+    els.resetBtn.textContent = "CONFIRM?";
+    els.resetBtn.classList.add("arm");
+    resetTimer = setTimeout(() => {
+      resetArmed = false;
+      els.resetBtn.textContent = "RESET";
+      els.resetBtn.classList.remove("arm");
+    }, 2600);
+    return;
+  }
+  clearTimeout(resetTimer);
+  resetArmed = false;
+  els.resetBtn.textContent = "RESET";
+  els.resetBtn.classList.remove("arm");
+  readSettings();
+  initPopulation();
+  buffers = [];
+  updateGenLabels();
+  renderGrid();
+});
+
+let resizeTimer = null;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    for (let i = 0; i < cards.length; i++) drawSpecimen(cards[i].canvas, engine.population[i]);
+  }, 160);
+});
+
+buildSelectionParams();
+buildCrossoverParams();
+initPopulation();
+updateGenLabels();
+renderGrid();
+</script>
+</body>
+</html>
