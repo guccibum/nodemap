@@ -390,7 +390,7 @@ function nodeEl(n) {
   el.querySelector('.kind').textContent = n.kind;
   const titleEl = el.querySelector('.title');
   titleEl.textContent = n.title;
-  titleEl.title = n.title + '  (hold ⌥ to select this text, double-click to rename)';
+  titleEl.title = n.title + '  (hold ⌥ to select this text)';
 
   const body = el.querySelector('.body');
   if (n.kind === 'note') {
@@ -409,14 +409,6 @@ function nodeEl(n) {
     body.appendChild(foot);
     writeSpec(n, foot);
   }
-
-  el.querySelector('.title').addEventListener('dblclick', e => {
-    const t = e.currentTarget;
-    t.contentEditable = 'plaintext-only';
-    t.focus();
-    document.execCommand('selectAll');
-    t.onblur = () => { t.contentEditable = 'false'; n.title = t.textContent.trim() || 'untitled'; save(); };
-  });
 
   return el;
 }

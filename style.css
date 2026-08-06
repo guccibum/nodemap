@@ -71,7 +71,6 @@ body{
 }
 .node .head .kind{color:var(--dim);font-size:10px;text-transform:uppercase;letter-spacing:.06em}
 .node .head .title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.node .head .title[contenteditable="true"]{user-select:text;cursor:text;outline:none}
 
 /* Holding Alt turns names into selectable text. It has to be a modifier: a
    plain drag on the header is how you move a node, and one gesture cannot both
