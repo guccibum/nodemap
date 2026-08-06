@@ -1192,7 +1192,9 @@ async function auditMedia() {
 
   for (const n of state.nodes) {
     if (!n.src || n.status === 'copying' || n.local) continue;
-    const entry = have.get(n.src.replace(/^media\//, ''));
+    // Local builds index by bare filename; published ones by the path the site
+    // asks for. Try both rather than assume which shape this is.
+    const entry = have.get(n.src) || have.get(n.src.replace(/^media\//, ''));
 
     let want = '';
     if (!entry) want = 'missing';
