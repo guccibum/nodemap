@@ -11,7 +11,8 @@ const CONF = window.NODEMAP || {};
 const STATIC = !!CONF.static;                  // no server: nothing to POST to
 const MEDIA_BASE = CONF.mediaBase || '';       // e.g. an R2 bucket URL
 const BUILD = CONF.v || '';               // cache-buster stamped by the build
-const DETAIL_AT = 200;                         // on-screen px before the real file loads
+const DETAIL_AT = 200;
+const LABEL_MIN_PX = 11;                       // smallest note text worth reading                         // on-screen px before the real file loads
 
 const STORE = 'nodebasedpres.graph';
 const NS = 'http://www.w3.org/2000/svg';
@@ -432,6 +433,13 @@ function refresh(id) {
   save();
 }
 
+// Notes hold a legible size no matter how far out the camera is: the further
+// you zoom, the more the text is scaled back up to compensate.
+function labelScale(n, w) {
+  const textPx = 12 * (w / NODE_W) * rview.k;   // what it would render at
+  return clamp(LABEL_MIN_PX / Math.max(textPx, 0.0001), 1, 60);
+}
+
 function place(id) {
   const r = rpos.get(id);
   const el = els.get(id);
@@ -441,6 +449,8 @@ function place(id) {
   // rides the rendered width, so it scales through the glide rather than
   // snapping at the end.
   el.style.setProperty('--scale', r.w / NODE_W);
+  const n = node(id);
+  if (n && n.kind === 'note') el.style.setProperty('--label', labelScale(n, r.w));
 }
 
 function portPos(id, side) {
@@ -563,7 +573,14 @@ function tick() {
   cam = ease(rview, state.view, 'x', EASE_VIEW, 0.05) || cam;
   cam = ease(rview, state.view, 'y', EASE_VIEW, 0.05) || cam;
   cam = ease(rview, state.view, 'k', EASE_VIEW, 0.0002) || cam;
-  if (cam) applyView();
+  if (cam) {
+    applyView();
+    for (const n of state.nodes) {
+      if (n.kind !== 'note') continue;
+      const r = rpos.get(n.id), el = els.get(n.id);
+      if (r && el) el.style.setProperty('--label', labelScale(n, r.w));
+    }
+  }
 
   for (const n of state.nodes) {
     const r = rpos.get(n.id);
