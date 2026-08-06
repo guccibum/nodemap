@@ -11,8 +11,7 @@ const CONF = window.NODEMAP || {};
 const STATIC = !!CONF.static;                  // no server: nothing to POST to
 const MEDIA_BASE = CONF.mediaBase || '';       // e.g. an R2 bucket URL
 const BUILD = CONF.v || '';               // cache-buster stamped by the build
-const DETAIL_AT = 200;
-const LABEL_MIN_PX = 11;                       // smallest note text worth reading                         // on-screen px before the real file loads
+const DETAIL_AT = 200;                         // on-screen px before the real file loads
 
 const STORE = 'nodebasedpres.graph';
 const NS = 'http://www.w3.org/2000/svg';
@@ -389,7 +388,9 @@ function nodeEl(n) {
 
   // filenames are user data — set as text, never parsed as markup
   el.querySelector('.kind').textContent = n.kind;
-  el.querySelector('.title').textContent = n.title;
+  const titleEl = el.querySelector('.title');
+  titleEl.textContent = n.title;
+  titleEl.title = n.title + '  (hold ⌥ to select this text, double-click to rename)';
 
   const body = el.querySelector('.body');
   if (n.kind === 'note') {
@@ -708,6 +709,8 @@ canvas.addEventListener('mousedown', ev => {
     pickNode(n.id);
     drag = { mode: 'size', n, px: ev.clientX, w0: n.w };
     render();
+  } else if (head && ev.altKey) {
+    return;                       // Alt: selecting the name, not moving the node
   } else if (head) {
     const n = node(nodeDiv.dataset.id);
     // dragging one of several selected nodes carries the whole selection
@@ -911,6 +914,11 @@ function applyRewire(targetId) {
 
 // Crosshair while Shift is held, so the mode is visible before you commit to it.
 const markMode = on => document.body.classList.toggle('marking', on);
+
+const pickText = on => document.body.classList.toggle('picktext', on);
+window.addEventListener('keydown', ev => { if (ev.altKey) pickText(true); });
+window.addEventListener('keyup', ev => { if (!ev.altKey) pickText(false); });
+window.addEventListener('blur', () => pickText(false));
 
 window.addEventListener('keydown', ev => { if (ev.key === 'Shift') markMode(true); });
 window.addEventListener('keyup', ev => {

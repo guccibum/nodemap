@@ -73,6 +73,16 @@ body{
 .node .head .title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .node .head .title[contenteditable="true"]{user-select:text;cursor:text;outline:none}
 
+/* Holding Alt turns names into selectable text. It has to be a modifier: a
+   plain drag on the header is how you move a node, and one gesture cannot both
+   move something and sweep a selection through it. */
+body.picktext .node .head .title{user-select:text;cursor:text}
+body.picktext .node .head{cursor:text}
+
+/* These are not drag handles, so they can always be selected and copied. */
+.node .foot .spec,
+.node .body .missing{user-select:text;cursor:text}
+
 .node .body{padding:8px;font-size:12px;color:var(--text)}
 
 /* The media element fills the node's width and takes its height from the file's
