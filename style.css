@@ -205,14 +205,8 @@ body.far .node .spec,
 body.far .node .native,
 body.far .grip{visibility:hidden}
 
-/* A note's words are the point of it, so they never disappear. Zoomed out the
-   body counter-scales to hold a readable size on screen — the node's own box
-   keeps its true footprint, so ports and wires stay exactly where they were. */
-.node.note .body{
-  transform-origin:0 0;
-  transform:scale(var(--label,1));
-  will-change:transform;
-}
+/* Note text is never hidden — it simply sits in its box and scales with the
+   canvas like everything else, small when you're far out. */
 
 /* ---- selection box ---- */
 #marquee{

@@ -433,13 +433,6 @@ function refresh(id) {
   save();
 }
 
-// Notes hold a legible size no matter how far out the camera is: the further
-// you zoom, the more the text is scaled back up to compensate.
-function labelScale(n, w) {
-  const textPx = 12 * (w / NODE_W) * rview.k;   // what it would render at
-  return clamp(LABEL_MIN_PX / Math.max(textPx, 0.0001), 1, 60);
-}
-
 function place(id) {
   const r = rpos.get(id);
   const el = els.get(id);
@@ -449,8 +442,6 @@ function place(id) {
   // rides the rendered width, so it scales through the glide rather than
   // snapping at the end.
   el.style.setProperty('--scale', r.w / NODE_W);
-  const n = node(id);
-  if (n && n.kind === 'note') el.style.setProperty('--label', labelScale(n, r.w));
 }
 
 function portPos(id, side) {
@@ -532,13 +523,6 @@ function applyView() {
   // the nodes are too small to read anyway.
   document.body.classList.toggle('far', rview.k < 0.22);
 
-  // Note labels depend on the zoom, so they belong here — anywhere else and
-  // they go stale the moment the camera moves without that path running.
-  for (const n of state.nodes) {
-    if (n.kind !== 'note') continue;
-    const r = rpos.get(n.id), el = els.get(n.id);
-    if (r && el) el.style.setProperty('--label', labelScale(n, r.w));
-  }
 }
 
 /* ---------- the glide ---------- */
