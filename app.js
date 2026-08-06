@@ -531,6 +531,14 @@ function applyView() {
   // Sub-pixel text is noise that still costs a layout — drop the chrome when
   // the nodes are too small to read anyway.
   document.body.classList.toggle('far', rview.k < 0.22);
+
+  // Note labels depend on the zoom, so they belong here — anywhere else and
+  // they go stale the moment the camera moves without that path running.
+  for (const n of state.nodes) {
+    if (n.kind !== 'note') continue;
+    const r = rpos.get(n.id), el = els.get(n.id);
+    if (r && el) el.style.setProperty('--label', labelScale(n, r.w));
+  }
 }
 
 /* ---------- the glide ---------- */
@@ -573,14 +581,7 @@ function tick() {
   cam = ease(rview, state.view, 'x', EASE_VIEW, 0.05) || cam;
   cam = ease(rview, state.view, 'y', EASE_VIEW, 0.05) || cam;
   cam = ease(rview, state.view, 'k', EASE_VIEW, 0.0002) || cam;
-  if (cam) {
-    applyView();
-    for (const n of state.nodes) {
-      if (n.kind !== 'note') continue;
-      const r = rpos.get(n.id), el = els.get(n.id);
-      if (r && el) el.style.setProperty('--label', labelScale(n, r.w));
-    }
-  }
+  if (cam) applyView();
 
   for (const n of state.nodes) {
     const r = rpos.get(n.id);
