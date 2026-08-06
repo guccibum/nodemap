@@ -10,6 +10,7 @@
 const CONF = window.NODEMAP || {};
 const STATIC = !!CONF.static;                  // no server: nothing to POST to
 const MEDIA_BASE = CONF.mediaBase || '';       // e.g. an R2 bucket URL
+const BUILD = CONF.v || '';               // cache-buster stamped by the build
 const DETAIL_AT = 200;                         // on-screen px before the real file loads
 
 const STORE = 'nodebasedpres.graph';
@@ -1159,7 +1160,7 @@ async function take(f, x, y) {
 async function auditMedia() {
   let have;
   try {
-    const res = await fetch(STATIC ? 'media-index.json' : '/api/media');
+    const res = await fetch(STATIC ? 'media-index.json?v=' + BUILD : '/api/media');
     if (!res.ok) throw new Error(res.status);
     const list = await res.json();
     // Older servers answer with bare filenames, newer ones with objects that
@@ -1281,7 +1282,7 @@ function migrate() {
 // starting blank and then overwriting the real map.
 async function loadFromDisk() {
   try {
-    const res = await fetch(STATIC ? 'graph.json' : '/graph');
+    const res = await fetch(STATIC ? 'graph.json?v=' + BUILD : '/graph');
     if (!res.ok) return false;
     const disk = await res.json();
     if (!disk || !disk.nodes || !disk.nodes.length) return false;
