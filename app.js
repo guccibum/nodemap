@@ -1241,6 +1241,7 @@ let booting = true;     // never persist the seeded demo over real saved work
 function serialize() {
   return JSON.stringify({
     ...state,
+    v: BUILD,                       // which published build this copy came from
     nodes: state.nodes.map(({ status, detail, ...keep }) => keep),
   });
 }
@@ -1262,7 +1263,17 @@ function save() {
 function load() {
   try {
     const raw = localStorage.getItem(STORE);
-    if (raw) state = Object.assign(state, JSON.parse(raw));
+    if (raw) {
+      const saved = JSON.parse(raw);
+      // A published copy that has moved on invalidates whatever a visitor's
+      // browser kept: those nodes point at file paths this build no longer
+      // uses, and localStorage otherwise wins forever — no refresh can fix it.
+      if (STATIC && saved.v !== BUILD) {
+        localStorage.removeItem(STORE);
+      } else {
+        state = Object.assign(state, saved);
+      }
+    }
   } catch (e) { /* start empty */ }
   migrate();
 }
